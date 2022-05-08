@@ -1,0 +1,10 @@
+[submodule "resana/lib/glfw"]
+	path = resana/lib/glfw
+	url = https://github.com/brolgedu/glfw
+[submodule "resana/lib/spdlog"]
+	path = resana/lib/spdlog
+	url = https://github.com/brolgedu/spdlog
+[submodule "resana/lib/imgui"]
+	path = resana/lib/imgui
+	url = https://github.com/brolgedu/imgui
+	branch = docking
