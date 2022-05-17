@@ -1,0 +1,8 @@
+//
+// Created by Joel on 5/13/2022.
+//
+
+#ifndef RESANA_PRINTERRORMSG_H
+#define RESANA_PRINTERRORMSG_H
+
+#endif //RESANA_PRINTERRORMSG_H
