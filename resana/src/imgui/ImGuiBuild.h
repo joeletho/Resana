@@ -1,8 +1,4 @@
-//
-// Created by Joel on 5/9/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_IMGUIBUILD_H
-#define RESOURCEANALYZER_IMGUIBUILD_H
-
-#endif //RESOURCEANALYZER_IMGUIBUILD_H
+#include "backends/imgui_impl_opengl3.cpp"
+#include "backends/imgui_impl_glfw.cpp"
