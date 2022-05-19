@@ -12,8 +12,8 @@ namespace RESANA {
         if (!sInstance) {
             sInstance = this;
         }
-        MemoryData::Init();
-        CPUData::Init();
+        MemoryPerf::Init();
+        CPUPerf::Init();
     }
 
     PerfManager::~PerfManager() {
@@ -21,12 +21,12 @@ namespace RESANA {
         delete sInstance;
     }
 
-    MemoryData *PerfManager::GetMemoryData() {
-        return MemoryData::sInstance;
+    MemoryPerf *PerfManager::GetMemory() {
+        return MemoryPerf::sInstance;
     }
 
-    CPUData *PerfManager::GetCPUData() {
-        return CPUData::sInstance;
+    CPUPerf *PerfManager::GetCPU() {
+        return CPUPerf::sInstance;
     }
 
 } // RESANA

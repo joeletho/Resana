@@ -1,25 +1,27 @@
 #pragma once
 
-#include "MemoryData.h"
-#include "CPUData.h"
+#include "MemoryPerf.h"
+#include "CPUPerf.h"
 
 #include <thread>
 
 namespace RESANA {
 
+    class MemoryPerf;
+
+    class CPUPerf;
+
     class PerfManager {
     public:
         static void Init();
-        static MemoryData *GetMemoryData();
-        static CPUData *GetCPUData();
+        static MemoryPerf *GetMemory();
+        static CPUPerf *GetCPU();
 
     private:
         PerfManager();
         ~PerfManager();
 
     private:
-        std::thread mMemThread, mCPUThread;
-
         static PerfManager *sInstance;
     };
 
