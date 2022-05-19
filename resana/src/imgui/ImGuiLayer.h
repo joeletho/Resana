@@ -1,16 +1,27 @@
-//
-// Created by Joel on 5/9/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_IMGUILAYER_H
-#define RESOURCEANALYZER_IMGUILAYER_H
+#include "core/Layer.h"
 
 namespace RESANA {
 
-class ImGuiLayer {
+    class ImGuiLayer : public Layer {
+    public:
+        ImGuiLayer();
+        ~ImGuiLayer() override;
 
-};
+        static void Begin();
+        static void End();
+
+        void OnAttach() override;
+        void OnDetach() override;
+        void OnImGuiRender() override;
+
+    private:
+        static void ShowImGuiDockspace();
+
+    private:
+        float mTime = 0.0f;
+    };
 
 } // RESANA
 
-#endif //RESOURCEANALYZER_IMGUILAYER_H
