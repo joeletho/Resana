@@ -2,6 +2,8 @@
 
 namespace RESANA {
 
+    MemoryData *MemoryData::sInstance = nullptr;
+
     MemoryData::MemoryData() {
         mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
         UpdateMemoryInfo();
@@ -56,5 +58,26 @@ namespace RESANA {
                              (PROCESS_MEMORY_COUNTERS *) &mPMC,
                              sizeof(mPMC));
     }
+
+    void MemoryData::Init() {
+        if (!sInstance) {
+            sInstance = new MemoryData();
+            sInstance->Run();
+        }
+    }
+
+    void MemoryData::Run() {
+        if (mRunning) { return; }
+        mRunning = true;
+        mInfoThread = new std::thread(&MemoryData::UpdateMemoryInfo, this);
+        mInfoThread->detach();
+        mPMCThread = new std::thread(&MemoryData::UpdatePMC, this);
+        mPMCThread->detach();
+    }
+
+    void MemoryData::Stop() {
+        mRunning = false;
+    }
+
 
 }

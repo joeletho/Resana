@@ -17,6 +17,7 @@ namespace RESANA {
         static float GetTimeMilliseconds();
         static float GetTimeNanoseconds();
 
+        static long long GetTime();
         static std::string GetTimeFormatted();
         static void Sleep(int sleep_time_ms);
 
@@ -30,9 +31,7 @@ namespace RESANA {
 
     class Timestep {
     public:
-        explicit Timestep(float time = 0.0f)
-                : mTime(time) {
-        }
+        explicit Timestep(float time = 0.0f) : mTime(time) {}
 
         operator float() const { return mTime; }
 
@@ -44,31 +43,32 @@ namespace RESANA {
         float mTime;
     };
 
-
     //--------------------------------------------------------------
     // [SECTION] Stop Watch
     //--------------------------------------------------------------
 
     class StopWatch {
     public:
+        StopWatch();
+
         void Start();
         void Stop();
-        void CalculateTime();
         [[nodiscard]] float GetSeconds() const;
         [[nodiscard]] unsigned int GetHours() const;
         [[nodiscard]] unsigned int GetMinutes() const;
         [[nodiscard]] unsigned int GetMilliseconds() const;
         std::string GetElapsedTime();
 
-        void CalculateElapsedTime();
 
     private:
-        StopWatch();
+        void CalculateTime();
+        void CalculateElapsedTime();
 
     private:
         std::string sElapsedTime;
         std::chrono::steady_clock::time_point sStartTime;
         std::chrono::steady_clock::time_point sStopTime;
+        bool mStarted = false;
 
     private:
         struct TimeData {

@@ -15,23 +15,28 @@ namespace RESANA {
     }
 
     float Time::GetTimeSeconds() {
-        return (float)((double)std::chrono::duration_cast<std::chrono::nanoseconds>(
+        return (float) ((double) std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::high_resolution_clock::now() - mTimeStarted).count() * 1E-9);
     };
 
     float Time::GetTimeMilliseconds() {
-        return (float)((double)std::chrono::duration_cast<std::chrono::nanoseconds>(
+        return (float) ((double) std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::high_resolution_clock::now() - mTimeStarted).count() * 1E-3);
     };
 
     float Time::GetTimeNanoseconds() {
-        return (float)((double)std::chrono::duration_cast<std::chrono::nanoseconds>(
+        return (float) ((double) std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::high_resolution_clock::now() - mTimeStarted).count() * 1E-6);
     };
 
 
     void Time::Sleep(int sleep_time_ms) {
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_ms));
+    }
+
+    long long Time::GetTime() {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - mTimeStarted).count();
     }
 
     std::string Time::GetTimeFormatted() {
@@ -50,10 +55,12 @@ namespace RESANA {
 
     void StopWatch::Start() {
         sStartTime = std::chrono::steady_clock::now();
+        mStarted = true;
     }
 
     void StopWatch::Stop() {
         sStopTime = std::chrono::steady_clock::now();
+        mStarted = false;
         CalculateTime();
         CalculateElapsedTime();
     }
@@ -86,8 +93,17 @@ namespace RESANA {
     }
 
     std::string StopWatch::GetElapsedTime() {
+        if (mStarted) {
+
+        }
         return sElapsedTime;
     }
+    // std::string StopWatch::GetCurrentElapsedTime() {
+    //     if (mStarted) {
+    //
+    //     }
+    //     return sElapsedTime;
+    // }
 
     void StopWatch::CalculateElapsedTime() {
         char hour[4], min[4], sec[4], ms[4];
@@ -113,4 +129,5 @@ namespace RESANA {
         sElapsedTime += *ms;
         sElapsedTime += "ms";
     }
+
 }
