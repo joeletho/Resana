@@ -3,7 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/resana/lib/glfw" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/resana/lib/imgui" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/resana/lib/spdlog" vcs="Git" />
   </component>
 </project>

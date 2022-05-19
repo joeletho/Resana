@@ -54,7 +54,7 @@ namespace RESANA {
         const int DEQUE_SIZE = 2;
 
         std::set<std::pair<int, double>> mCPUSet;
-        std::deque<double> mLoadDeque(DEQUE_SIZE);
+        std::deque<double> mLoadDeque;
 
         double mCurrentLoadCPU;
         double mCurrentLoadProc;
