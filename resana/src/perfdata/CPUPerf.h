@@ -19,7 +19,7 @@ namespace RESANA {
         DWORD Buffer{};                                     // Size of the sProcessors buffer
     };
 
-    class CPUData {
+    class CPUPerf {
     public:
         static void Init();
 
@@ -36,8 +36,8 @@ namespace RESANA {
         [[nodiscard]] bool IsRunning() const { return mRunning; }
 
     private:
-        CPUData();
-        ~CPUData();
+        CPUPerf();
+        ~CPUPerf();
         void InitData();
         void InitProc();
 
@@ -50,18 +50,15 @@ namespace RESANA {
         unsigned long mTimeStarted{};
         ProcessorData mProcessorData{};
 
+        const int MIN_SLEEP_TIME = 1000;
+        const int DEQUE_SIZE = 2;
+
         std::set<std::pair<int, double>> mCPUSet;
-        std::deque<double> mLoadDeque;
+        std::deque<double> mLoadDeque(DEQUE_SIZE);
+
         double mCurrentLoadCPU;
-        double mLastLoadCPU;
         double mCurrentLoadProc;
-        double mLastLoadProc;
-
         bool mRunning = false;
-
-        std::thread *mCollectionThread = nullptr;
-        std::thread *mUpdateTotalThread = nullptr;
-        std::thread *mUpdateTotalProcThread = nullptr;
 
         /* DATA */
         HQUERY mDataQuery;
@@ -74,7 +71,11 @@ namespace RESANA {
         PDH_HCOUNTER mProcCounter;
         ULARGE_INTEGER mLastCPU, mLastSysCPU, mLastUserCPU;
 
-        static CPUData *sInstance;
+        std::thread *mCollectionThread = nullptr;
+        std::thread *mUpdateTotalThread = nullptr;
+        std::thread *mUpdateTotalProcThread = nullptr;
+
+        static CPUPerf *sInstance;
 
         friend class PerfManager;
     };

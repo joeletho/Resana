@@ -1,4 +1,4 @@
-#include "CPUData.h"
+#include "CPUPerf.h"
 
 #include <Windows.h>
 
@@ -9,21 +9,27 @@
 
 namespace RESANA {
 
-    CPUData *CPUData::sInstance = nullptr;
+    CPUPerf *CPUPerf::sInstance = nullptr;
 
-    CPUData::CPUData() {
+    CPUPerf::CPUPerf() {
         mTimeStarted = Time::GetTime();
         InitData();
         InitProc();
     };
 
-    CPUData::~CPUData() {
+    CPUPerf::~CPUPerf() {
         if (mProcessorData.ProcessorPtr) {
             free(mProcessorData.ProcessorPtr);
         }
+        mCollectionThread = nullptr;
+        mUpdateTotalThread = nullptr;
+        mUpdateTotalProcThread = nullptr;
+        sInstance = nullptr;
+        delete mCollectionThread, mUpdateTotalThread,
+                mUpdateTotalProcThread, sInstance;
     }
 
-    void CPUData::InitData() {
+    void CPUPerf::InitData() {
         PDH_STATUS pdhStatus = ERROR_SUCCESS;
         SYSTEM_INFO sysInfo;
         GetSystemInfo(&sysInfo);
@@ -42,7 +48,7 @@ namespace RESANA {
         }
     }
 
-    void CPUData::CollectData() {
+    void CPUPerf::CollectData() {
         PDH_STATUS pdhStatus = ERROR_SUCCESS;
         while (mRunning) {
             if (!mProcessorData.Set->empty()) {
@@ -56,7 +62,7 @@ namespace RESANA {
                 RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
             }
 
-            Time::Sleep(1000);
+            Time::Sleep(MIN_SLEEP_TIME);
 
             pdhStatus = PdhCollectQueryData(mDataQuery);
             if (pdhStatus != ERROR_SUCCESS) {
@@ -85,7 +91,8 @@ namespace RESANA {
                 std::string name = mProcessorData.ProcessorPtr[i].szName;
                 double value = mProcessorData.ProcessorPtr[i].FmtValue.doubleValue;
                 if (name == "_Total") {
-                    if (mLoadDeque.size() == 3) {
+                    // Put the total into a deque to compute the average
+                    if (mLoadDeque.size() == DEQUE_SIZE) {
                         mLoadDeque.pop_front();
                     }
                     mLoadDeque.push_back(value);
@@ -103,7 +110,7 @@ namespace RESANA {
         }
     }
 
-    double CPUData::CalculateAvgLoad() {
+    double CPUPerf::CalculateAvgLoad() {
         double sum = 0;
         for (auto val: mLoadDeque) {
             sum += val;
@@ -111,66 +118,66 @@ namespace RESANA {
         return sum / mLoadDeque.size();
     }
 
-    std::set<std::pair<int, double>> CPUData::GetCurrentLoadAll() const {
+    std::set<std::pair<int, double>> CPUPerf::GetCurrentLoadAll() const {
         return mCPUSet;
     }
 
-    void CPUData::Init() {
+    void CPUPerf::Init() {
         if (!sInstance) {
-            sInstance = new CPUData();
+            sInstance = new CPUPerf();
             sInstance->Run();
         }
     }
 
-    double CPUData::GetCurrentLoad() {
+    double CPUPerf::GetCurrentLoad() {
         if (mCurrentLoadCPU < 0) {
             return 0.0;
         }
         return mCurrentLoadCPU;
     }
 
-    double CPUData::GetCurrentLoadProc() const {
+    double CPUPerf::GetCurrentLoadProc() const {
         if (mCurrentLoadCPU < 0) {
             return 0.0;
         }
         return mCurrentLoadProc;
     }
 
-    double CPUData::GetCurrentLoadTotal() const {
+    double CPUPerf::GetCurrentLoadTotal() const {
         if (mCurrentLoadCPU < 0) {
             return 0.0;
         }
         return mCurrentLoadCPU * GetNumProcessors();
     }
 
-    double CPUData::GetCurrentLoadTotalProc() const {
+    double CPUPerf::GetCurrentLoadTotalProc() const {
         if (mCurrentLoadProc < 0) {
             return 0.0;
         }
         return mCurrentLoadProc * GetNumProcessors();
     }
 
-    int CPUData::GetNumProcessors() const {
+    int CPUPerf::GetNumProcessors() const {
         return (int) mProcessorData.Size;
     }
 
-    void CPUData::Run() {
+    void CPUPerf::Run() {
         if (mRunning) { return; }
 
         mRunning = true;
-        mCollectionThread = new std::thread(&CPUData::CollectData, this);
+        mCollectionThread = new std::thread(&CPUPerf::CollectData, this);
         mCollectionThread->detach();
         // mUpdateTotalThread = new std::thread(&CPUData::UpdateTotalLoad, this);
         // mUpdateTotalThread->detach();
-        mUpdateTotalProcThread = new std::thread(&CPUData::UpdateTotalLoadProc, this);
+        mUpdateTotalProcThread = new std::thread(&CPUPerf::UpdateTotalLoadProc, this);
         mUpdateTotalProcThread->detach();
     }
 
-    void CPUData::Stop() {
+    void CPUPerf::Stop() {
         mRunning = false;
     }
 
-    void CPUData::UpdateTotalLoad() {
+    void CPUPerf::UpdateTotalLoad() {
         PDH_STATUS pdhStatus = ERROR_SUCCESS;
 
         pdhStatus = PdhOpenQuery(nullptr, 0, &mProcQuery);
@@ -189,7 +196,7 @@ namespace RESANA {
             if (pdhStatus != ERROR_SUCCESS) {
                 RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
             }
-            Time::Sleep(1000);
+            Time::Sleep(MIN_SLEEP_TIME);
 
             pdhStatus = PdhCollectQueryData(mProcQuery);
             if (pdhStatus == ERROR_SUCCESS) {
@@ -206,7 +213,7 @@ namespace RESANA {
         }
     }
 
-    void CPUData::InitProc() {
+    void CPUPerf::InitProc() {
         FILETIME ftime, fsys, fuser;
 
         GetSystemTimeAsFileTime(&ftime);
@@ -218,7 +225,7 @@ namespace RESANA {
         memcpy(&mLastUserCPU, &fuser, sizeof(FILETIME));
     }
 
-    void CPUData::UpdateTotalLoadProc() {
+    void CPUPerf::UpdateTotalLoadProc() {
         FILETIME ftime, fsys, fuser;
         ULARGE_INTEGER now, sys, user;
         double percent;
