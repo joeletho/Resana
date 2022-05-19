@@ -1,0 +1,616 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/bin/ResourceAnalyzer.exe"
+		},
+		{
+			"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/bin/ResourceAnalyzer.pdb"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_libraries",
+			"target_compile_definitions",
+			"include_directories",
+			"target_include_directories",
+			"target_precompile_headers"
+		],
+		"files" : 
+		[
+			"resana/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 39,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 53,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 62,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 61,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 8,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 43,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 41,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"fragment" : "-std:c++17"
+				},
+				{
+					"fragment" : "/YcC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.hxx /FpC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/./cmake_pch.cxx.pch /FIC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "BUILD_SHARED_LIB=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "GLFW_INCLUDE_NONE=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_BUILD_DLL=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_DEBUG=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_ENABLE_ASSERTS=1"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "SPDLOG_COMPILED_LIB"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glfw"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/spdlog"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/src"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glfw/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/."
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/backends"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/spdlog/include"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "17"
+			},
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 8,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src/rspch.h"
+				},
+				{
+					"backtrace" : 2,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include/glad/glad.h"
+				},
+				{
+					"backtrace" : 2,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/imgui.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"fragment" : "-std:c++17"
+				},
+				{
+					"fragment" : "/YuC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.hxx /FpC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/./cmake_pch.cxx.pch /FIC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.hxx"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "BUILD_SHARED_LIB=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "GLFW_INCLUDE_NONE=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_BUILD_DLL=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_DEBUG=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "RS_ENABLE_ASSERTS=1"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "SPDLOG_COMPILED_LIB"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glfw"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/spdlog"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/src"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glfw/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/."
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/backends"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/spdlog/include"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "17"
+			},
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 8,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src/rspch.h"
+				},
+				{
+					"backtrace" : 2,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include/glad/glad.h"
+				},
+				{
+					"backtrace" : 2,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/imgui/imgui.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				1,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				18,
+				20,
+				22,
+				24,
+				26
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "glad::@7c31bd0a8ed185e0f20d"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "glfw::@0208e37edb0fa27771fb"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "imgui::@c15aa5d1cc1b6b2d2309"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "spdlog::@366fb7e40cfc312657ac"
+		}
+	],
+	"id" : "ResourceAnalyzer::@b5e0ad69e1dbf0e5b571",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -MDd",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/machine:X86 /debug /INCREMENTAL /subsystem:console",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "resana\\lib\\glad\\glad.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "resana\\lib\\glfw\\src\\glfw3.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "resana\\lib\\imgui\\imgui.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "resana\\lib\\spdlog\\spdlogd.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "pdh.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "resana\\lib\\glfw\\src\\glfw3.lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "ResourceAnalyzer",
+	"nameOnDisk" : "ResourceAnalyzer.exe",
+	"paths" : 
+	{
+		"build" : "resana",
+		"source" : "resana"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				18,
+				20,
+				22,
+				24,
+				26
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				2,
+				3,
+				5,
+				7,
+				9,
+				11,
+				13,
+				15,
+				16,
+				17,
+				19,
+				21,
+				23,
+				25
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				27
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 0,
+			"path" : "cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.cxx",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/Application.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Application.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Core.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/Layer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Layer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/LayerStack.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/LayerStack.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/Log.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Log.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/Renderer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Renderer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/core/Window.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/core/Window.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/helpers/Time.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/helpers/Time.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/helpers/WinFuncs.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/imgui/ImGuiBuild.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/imgui/ImGuiLayer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/imgui/ImGuiLayer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/perfdata/CPUPerf.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/perfdata/CPUPerf.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/perfdata/MemoryPerf.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/perfdata/MemoryPerf.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/perfdata/PerfManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/src/perfdata/PerfManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/src/rspch.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"path" : "cmake-build-debug/resana/CMakeFiles/ResourceAnalyzer.dir/cmake_pch.hxx",
+			"sourceGroupIndex" : 2
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -1,0 +1,211 @@
+{
+	"archive" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/machine:X86",
+				"role" : "flags"
+			}
+		]
+	},
+	"artifacts" : 
+	[
+		{
+			"path" : "resana/lib/glad/glad.lib"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include_directories",
+			"target_include_directories",
+			"target_precompile_headers"
+		],
+		"files" : 
+		[
+			"resana/lib/glad/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 10,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 8,
+				"parent" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 14,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 12,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"fragment" : "/YcC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.h /FpC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/./cmake_pch.c.pch /FIC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.h"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/src"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 5,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include/glad/glad.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd"
+				},
+				{
+					"fragment" : "/YuC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.h /FpC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/./cmake_pch.c.pch /FIC:/Users/Joel/Dev/ResourceAnalyzer/cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.h"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 3,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/src"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/src"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include"
+				}
+			],
+			"language" : "C",
+			"precompileHeaders" : 
+			[
+				{
+					"backtrace" : 5,
+					"header" : "C:/Users/Joel/Dev/ResourceAnalyzer/resana/lib/glad/include/glad/glad.h"
+				}
+			],
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"id" : "glad::@7c31bd0a8ed185e0f20d",
+	"name" : "glad",
+	"nameOnDisk" : "glad.lib",
+	"paths" : 
+	{
+		"build" : "resana/lib/glad",
+		"source" : "resana/lib/glad"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				2,
+				3
+			]
+		},
+		{
+			"name" : "Precompile Header File",
+			"sourceIndexes" : 
+			[
+				4
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 0,
+			"path" : "cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "resana/lib/glad/src/glad.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/lib/glad/include/glad/glad.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "resana/lib/glad/include/KHR/khrplatform.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"path" : "cmake-build-debug/resana/lib/glad/CMakeFiles/glad.dir/cmake_pch.h",
+			"sourceGroupIndex" : 2
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}
