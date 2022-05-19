@@ -1,83 +1,80 @@
-#include "MemoryData.h"
+#include "MemoryPerf.h"
 
 namespace RESANA {
 
-    MemoryData *MemoryData::sInstance = nullptr;
+    MemoryPerf *MemoryPerf::sInstance = nullptr;
 
-    MemoryData::MemoryData() {
+    MemoryPerf::MemoryPerf() {
         mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
-        UpdateMemoryInfo();
     }
 
-    DWORDLONG MemoryData::GetTotalPhys() {
-        UpdateMemoryInfo();
+    MemoryPerf::~MemoryPerf() {
+        mInfoThread = nullptr;
+        mPMCThread = nullptr;
+        sInstance = nullptr;
+        delete mInfoThread, mPMCThread, sInstance;
+    }
+
+    DWORDLONG MemoryPerf::GetTotalPhys() {
         return mMemoryInfo.ullTotalPhys;
     }
 
-    DWORDLONG MemoryData::GetAvailPhys() {
-        UpdateMemoryInfo();
+    DWORDLONG MemoryPerf::GetAvailPhys() {
         return mMemoryInfo.ullAvailPhys;
     }
 
-    DWORDLONG MemoryData::GetUsedPhys() {
-        UpdateMemoryInfo();
+    DWORDLONG MemoryPerf::GetUsedPhys() {
         return mMemoryInfo.ullTotalPhys - mMemoryInfo.ullAvailPhys;
     }
 
-    SIZE_T MemoryData::GetCurrProcUsagePhys() {
-        UpdatePMC();
+    SIZE_T MemoryPerf::GetCurrProcUsagePhys() {
         return mPMC.WorkingSetSize;
     }
 
-    DWORDLONG MemoryData::GetTotalVirtual() {
-        UpdateMemoryInfo();
+    DWORDLONG MemoryPerf::GetTotalVirtual() {
         return mMemoryInfo.ullTotalPageFile;
     }
 
-    DWORDLONG MemoryData::GetAvailVirtual() {
-        UpdateMemoryInfo();
+    DWORDLONG MemoryPerf::GetAvailVirtual() {
         return mMemoryInfo.ullAvailVirtual;
     }
 
-    DWORDLONG MemoryData::GetUsedVirtual() {
-        UpdateMemoryInfo();
+    DWORDLONG MemoryPerf::GetUsedVirtual() {
         return mMemoryInfo.ullTotalPageFile - mMemoryInfo.ullAvailPageFile;
     }
 
-    SIZE_T MemoryData::GetCurrProcUsageVirtual() {
-        UpdatePMC();
+    SIZE_T MemoryPerf::GetCurrProcUsageVirtual() {
         return mPMC.PrivateUsage;
     }
 
-    void MemoryData::UpdateMemoryInfo() {
+    void MemoryPerf::UpdateMemoryInfo() {
         GlobalMemoryStatusEx(&mMemoryInfo);
     }
 
-    void MemoryData::UpdatePMC() {
+    void MemoryPerf::UpdatePMC() {
         GetProcessMemoryInfo(GetCurrentProcess(),
                              (PROCESS_MEMORY_COUNTERS *) &mPMC,
                              sizeof(mPMC));
     }
 
-    void MemoryData::Init() {
+    void MemoryPerf::Init() {
         if (!sInstance) {
-            sInstance = new MemoryData();
+            sInstance = new MemoryPerf();
             sInstance->Run();
         }
     }
 
-    void MemoryData::Run() {
+    void MemoryPerf::Run() {
         if (mRunning) { return; }
         mRunning = true;
-        mInfoThread = new std::thread(&MemoryData::UpdateMemoryInfo, this);
+        mInfoThread = new std::thread(&MemoryPerf::UpdateMemoryInfo, this);
         mInfoThread->detach();
-        mPMCThread = new std::thread(&MemoryData::UpdatePMC, this);
+        mPMCThread = new std::thread(&MemoryPerf::UpdatePMC, this);
         mPMCThread->detach();
     }
 
-    void MemoryData::Stop() {
+    void MemoryPerf::Stop() {
         mRunning = false;
     }
-
 
 }

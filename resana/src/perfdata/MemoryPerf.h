@@ -9,7 +9,7 @@ namespace RESANA {
 
 #define BYTES_PER_MB 1048576;
 
-    class MemoryData {
+    class MemoryPerf {
     public:
     public:
         static void Init();
@@ -30,8 +30,8 @@ namespace RESANA {
         SIZE_T GetCurrProcUsageVirtual();
 
     private:
-        MemoryData();
-        ~MemoryData() = default;
+        MemoryPerf();
+        ~MemoryPerf();
         void UpdateMemoryInfo();
         void UpdatePMC();
     private:
@@ -42,7 +42,7 @@ namespace RESANA {
         std::thread *mInfoThread = nullptr;
         std::thread *mPMCThread = nullptr;
 
-        static MemoryData *sInstance;
+        static MemoryPerf *sInstance;
 
         friend class PerfManager;
     };
