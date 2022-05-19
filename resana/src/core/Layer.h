@@ -1,16 +1,27 @@
-//
-// Created by Joel on 5/9/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_LAYER_H
-#define RESOURCEANALYZER_LAYER_H
+#include "Core.h"
 
 namespace RESANA {
 
-class Layer {
+    class Layer {
+    public:
+        explicit Layer(std::string name = "Layer");
+        virtual ~Layer() = default;
 
-};
+        virtual void OnAttach() {}
+
+        virtual void OnDetach() {}
+
+        virtual void OnUpdate() {}
+
+        virtual void OnImGuiRender() {}
+
+        [[nodiscard]] inline const std::string &GetName() const { return mDebugName; }
+
+    private:
+        std::string mDebugName;
+    };
 
 } // RESANA
 
-#endif //RESOURCEANALYZER_LAYER_H

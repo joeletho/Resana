@@ -1,8 +1,15 @@
-//
-// Created by Joel on 5/8/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_CORE_H
-#define RESOURCEANALYZER_CORE_H
+#if defined(__clang__)
+#define DEBUG_BREAK __builtin_debugtrap()
+#elif defined(_MSC_VER)
+#define DEBUG_BREAK __debugbreak()
+#endif
 
-#endif //RESOURCEANALYZER_CORE_H
+#if defined(RS_ENABLE_ASSERTS)
+#define RS_ASSERT(x, ...) { if(!x) { RS_ERROR("Assertion Failed: {0}", __VA_ARGS__); DEBUG_BREAK; } }
+#define RS_CORE_ASSERT(x, ...) { if(!x) { RS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); DEBUG_BREAK; } }
+#else
+#define RS_ASSERT(x, ...)
+#define RS_CORE_ASSERT(x, ...)
+#endif

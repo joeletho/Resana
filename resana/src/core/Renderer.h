@@ -1,16 +1,16 @@
-//
-// Created by Joel on 5/9/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_RENDERER_H
-#define RESOURCEANALYZER_RENDERER_H
+#include <imgui.h>
 
 namespace RESANA {
 
-class Renderer {
+    class Renderer {
+    public:
+        static void Init();
+        static void SetClearColor(ImVec4 color);
+        static void Clear();
 
-};
+        static void GetError();
+    };
 
 } // RESANA
-
-#endif //RESOURCEANALYZER_RENDERER_H

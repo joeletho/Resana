@@ -1,8 +1,10 @@
-//
-// Created by Joel on 5/9/2022.
-//
-
+#include "rspch.h"
 #include "Layer.h"
 
 namespace RESANA {
+
+    Layer::Layer(std::string name)
+            : mDebugName(std::move(name)) {
+    }
+
 } // RESANA

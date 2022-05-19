@@ -1,16 +1,26 @@
-//
-// Created by Joel on 5/9/2022.
-//
+#pragma once
 
-#ifndef RESOURCEANALYZER_LAYERSTACK_H
-#define RESOURCEANALYZER_LAYERSTACK_H
+#include "Core.h"
+
+#include "Layer.h"
 
 namespace RESANA {
 
-class LayerStack {
+    class LayerStack {
+    public:
+        LayerStack();
+        ~LayerStack();
 
-};
+        void PushLayer(Layer *layer);
+        void PopLayer(Layer *layer);
+
+        std::vector<Layer *>::iterator begin() { return mLayers.begin(); }
+
+        std::vector<Layer *>::iterator end() { return mLayers.end(); }
+
+    private:
+        std::vector<Layer *> mLayers;
+        unsigned int mLayerInsertIndex = 0;
+    };
 
 } // RESANA
-
-#endif //RESOURCEANALYZER_LAYERSTACK_H
