@@ -1,13 +1,10 @@
 # Default ignored files
-/shelf/
-/workspace.xml
-# Editor-based HTTP Client requests
-/httpRequests/
+.idea/shelf/
+.idea/workspace.xml
 # Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
+.idea/dataSources/
+.idea/dataSources.local.xml
 
-.idea/
 **.exe
 **.ilk
 **.pdb
