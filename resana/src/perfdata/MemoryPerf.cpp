@@ -12,7 +12,9 @@ namespace RESANA {
         mInfoThread = nullptr;
         mPMCThread = nullptr;
         sInstance = nullptr;
-        delete mInfoThread, mPMCThread, sInstance;
+        delete mInfoThread;
+        delete mPMCThread;
+        delete sInstance;
     }
 
     DWORDLONG MemoryPerf::GetTotalPhys() {
@@ -48,13 +50,19 @@ namespace RESANA {
     }
 
     void MemoryPerf::UpdateMemoryInfo() {
-        GlobalMemoryStatusEx(&mMemoryInfo);
+        while (mRunning) {
+            GlobalMemoryStatusEx(&mMemoryInfo);
+            Sleep(1000);
+        }
     }
 
     void MemoryPerf::UpdatePMC() {
-        GetProcessMemoryInfo(GetCurrentProcess(),
-                             (PROCESS_MEMORY_COUNTERS *) &mPMC,
-                             sizeof(mPMC));
+        while (mRunning) {
+            GetProcessMemoryInfo(GetCurrentProcess(),
+                                 (PROCESS_MEMORY_COUNTERS *) &mPMC,
+                                 sizeof(mPMC));
+            Sleep(1000);
+        }
     }
 
     void MemoryPerf::Init() {
@@ -67,6 +75,7 @@ namespace RESANA {
     void MemoryPerf::Run() {
         if (mRunning) { return; }
         mRunning = true;
+
         mInfoThread = new std::thread(&MemoryPerf::UpdateMemoryInfo, this);
         mInfoThread->detach();
         mPMCThread = new std::thread(&MemoryPerf::UpdatePMC, this);
