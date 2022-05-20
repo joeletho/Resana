@@ -1,8 +1,12 @@
-//
-// Created by Joel on 5/20/2022.
-//
+#pragma once
 
-#ifndef RESANA_PANEL_H
-#define RESANA_PANEL_H
+namespace RESANA {
 
-#endif //RESANA_PANEL_H
+    class Panel {
+    public:
+        virtual ~Panel() = default;
+
+        virtual void ShowPanel(bool* pOpen) = 0;
+    };
+
+}
