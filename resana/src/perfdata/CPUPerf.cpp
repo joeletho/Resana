@@ -166,7 +166,6 @@ namespace RESANA {
                         mLoadDeque.pop_front();
                     }
                     mLoadDeque.push_back(value);
-                    mCurrentLoadCPU = CalculateAvgLoad();
                 } else {
                     // Use set to auto sort in ascending order by name. std::map would not sort correctly.
                     mProcessorData.Set->emplace(std::stoi(name), value);
@@ -174,6 +173,7 @@ namespace RESANA {
                 RS_CORE_TRACE("counter: cpu {0}, value {1:.2}", name.c_str(), value);
             }
 
+            mCurrentLoadCPU = CalculateAvgLoad();
             mCPUSet = *mProcessorData.Set;
             mProcessorData.ProcessorPtr = nullptr;
             mProcessorData.Buffer = 0;
