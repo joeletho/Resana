@@ -38,6 +38,8 @@ namespace RESANA {
     void Application::Run() {
 
         while (mRunning) {
+            // Check if window has been closed
+            mRunning = !glfwWindowShouldClose((GLFWwindow *) mWindow->GetNativeWindow());
 
             mMinimized = (mWindow->GetWidth() == 0 || mWindow->GetHeight() == 0);
             if (!mMinimized) {
@@ -53,10 +55,6 @@ namespace RESANA {
             ImGuiLayer::End();
 
             mWindow->Update();
-
-            // Check if window has been closed
-            mRunning = !glfwWindowShouldClose((GLFWwindow *) mWindow->GetNativeWindow());
-
         }
 
         // Clean up
@@ -64,6 +62,11 @@ namespace RESANA {
         glfwTerminate();
         glfwSetErrorCallback(nullptr);
     }
+
+    void Application::Terminate() {
+        mRunning = false;
+    }
+
 
 } // RESANA
 

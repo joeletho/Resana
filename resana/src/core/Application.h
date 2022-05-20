@@ -14,6 +14,7 @@ namespace RESANA {
 
         void PushLayer(Layer *layer);
         void Run();
+        void Terminate();
 
         inline Window &GetWindow() { return *mWindow; }
 
