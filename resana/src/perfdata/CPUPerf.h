@@ -49,7 +49,7 @@ namespace RESANA {
 
     private:
         const int MIN_SLEEP_TIME = 1000;
-        const int DEQUE_SIZE = 2;
+        const int DEQUE_SIZE = 3;
 
         ProcessorData mProcessorData{};
         std::set<std::pair<int, double>> mCPUSet;
