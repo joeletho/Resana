@@ -25,8 +25,10 @@ namespace RESANA {
         mUpdateTotalThread = nullptr;
         mUpdateTotalProcThread = nullptr;
         sInstance = nullptr;
-        delete mCollectionThread, mUpdateTotalThread,
-                mUpdateTotalProcThread, sInstance;
+        delete mCollectionThread;
+        delete mUpdateTotalThread;
+        delete mUpdateTotalProcThread;
+        delete sInstance;
     }
 
     void CPUPerf::InitData() {
@@ -101,7 +103,7 @@ namespace RESANA {
                     // Use set to auto sort in ascending order by name. std::map would not sort correctly.
                     mProcessorData.Set->emplace(std::stoi(name), value);
                 }
-                printf("counter: %s, value %.2g\n", name.c_str(), value);
+                RS_CORE_TRACE("counter: cpu {0}, value {1:.2}", name.c_str(), value);
             }
 
             mCPUSet = *mProcessorData.Set;
