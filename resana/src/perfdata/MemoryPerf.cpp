@@ -17,54 +17,6 @@ namespace RESANA {
         delete sInstance;
     }
 
-    DWORDLONG MemoryPerf::GetTotalPhys() {
-        return mMemoryInfo.ullTotalPhys;
-    }
-
-    DWORDLONG MemoryPerf::GetAvailPhys() {
-        return mMemoryInfo.ullAvailPhys;
-    }
-
-    DWORDLONG MemoryPerf::GetUsedPhys() {
-        return mMemoryInfo.ullTotalPhys - mMemoryInfo.ullAvailPhys;
-    }
-
-    SIZE_T MemoryPerf::GetCurrProcUsagePhys() {
-        return mPMC.WorkingSetSize;
-    }
-
-    DWORDLONG MemoryPerf::GetTotalVirtual() {
-        return mMemoryInfo.ullTotalPageFile;
-    }
-
-    DWORDLONG MemoryPerf::GetAvailVirtual() {
-        return mMemoryInfo.ullAvailVirtual;
-    }
-
-    DWORDLONG MemoryPerf::GetUsedVirtual() {
-        return mMemoryInfo.ullTotalPageFile - mMemoryInfo.ullAvailPageFile;
-    }
-
-    SIZE_T MemoryPerf::GetCurrProcUsageVirtual() {
-        return mPMC.PrivateUsage;
-    }
-
-    void MemoryPerf::UpdateMemoryInfo() {
-        while (mRunning) {
-            GlobalMemoryStatusEx(&mMemoryInfo);
-            Sleep(1000);
-        }
-    }
-
-    void MemoryPerf::UpdatePMC() {
-        while (mRunning) {
-            GetProcessMemoryInfo(GetCurrentProcess(),
-                                 (PROCESS_MEMORY_COUNTERS *) &mPMC,
-                                 sizeof(mPMC));
-            Sleep(1000);
-        }
-    }
-
     void MemoryPerf::Init() {
         if (!sInstance) {
             sInstance = new MemoryPerf();
@@ -84,6 +36,54 @@ namespace RESANA {
 
     void MemoryPerf::Stop() {
         mRunning = false;
+    }
+
+    DWORDLONG MemoryPerf::GetTotalPhys() const {
+        return mMemoryInfo.ullTotalPhys;
+    }
+
+    DWORDLONG MemoryPerf::GetAvailPhys() const {
+        return mMemoryInfo.ullAvailPhys;
+    }
+
+    DWORDLONG MemoryPerf::GetUsedPhys() const {
+        return mMemoryInfo.ullTotalPhys - mMemoryInfo.ullAvailPhys;
+    }
+
+    SIZE_T MemoryPerf::GetCurrProcUsagePhys() const {
+        return mPMC.WorkingSetSize;
+    }
+
+    DWORDLONG MemoryPerf::GetTotalVirtual() const {
+        return mMemoryInfo.ullTotalPageFile;
+    }
+
+    DWORDLONG MemoryPerf::GetAvailVirtual() const {
+        return mMemoryInfo.ullAvailVirtual;
+    }
+
+    DWORDLONG MemoryPerf::GetUsedVirtual() const {
+        return mMemoryInfo.ullTotalPageFile - mMemoryInfo.ullAvailPageFile;
+    }
+
+    SIZE_T MemoryPerf::GetCurrProcUsageVirtual() const {
+        return mPMC.PrivateUsage;
+    }
+
+    void MemoryPerf::UpdateMemoryInfo() {
+        while (mRunning) {
+            GlobalMemoryStatusEx(&mMemoryInfo);
+            Sleep(1000);
+        }
+    }
+
+    void MemoryPerf::UpdatePMC() {
+        while (mRunning) {
+            GetProcessMemoryInfo(GetCurrentProcess(),
+                                 (PROCESS_MEMORY_COUNTERS *) &mPMC,
+                                 sizeof(mPMC));
+            Sleep(1000);
+        }
     }
 
 }

@@ -18,22 +18,23 @@ namespace RESANA {
         void Stop();
 
         /* Physical Memory */
-        DWORDLONG GetTotalPhys();
-        DWORDLONG GetAvailPhys();
-        DWORDLONG GetUsedPhys();
-        SIZE_T GetCurrProcUsagePhys();
+        [[nodiscard]]DWORDLONG GetTotalPhys() const;
+        [[nodiscard]]DWORDLONG GetAvailPhys() const;
+        [[nodiscard]]DWORDLONG GetUsedPhys() const;
+        [[nodiscard]]SIZE_T GetCurrProcUsagePhys() const;
 
         /* Virtual Memory */
-        DWORDLONG GetTotalVirtual();
-        DWORDLONG GetAvailVirtual();
-        DWORDLONG GetUsedVirtual();
-        SIZE_T GetCurrProcUsageVirtual();
+        [[nodiscard]]DWORDLONG GetTotalVirtual() const;
+        [[nodiscard]]DWORDLONG GetAvailVirtual() const;
+        [[nodiscard]]DWORDLONG GetUsedVirtual() const;
+        [[nodiscard]]SIZE_T GetCurrProcUsageVirtual() const;
 
     private:
         MemoryPerf();
         ~MemoryPerf();
         void UpdateMemoryInfo();
         void UpdatePMC();
+
     private:
         MEMORYSTATUSEX mMemoryInfo{};
         PROCESS_MEMORY_COUNTERS_EX mPMC{};

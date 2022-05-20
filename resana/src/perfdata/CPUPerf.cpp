@@ -12,7 +12,6 @@ namespace RESANA {
     CPUPerf *CPUPerf::sInstance = nullptr;
 
     CPUPerf::CPUPerf() {
-        mTimeStarted = Time::GetTime();
         InitData();
         InitProc();
     };
@@ -29,6 +28,63 @@ namespace RESANA {
         delete mUpdateTotalThread;
         delete mUpdateTotalProcThread;
         delete sInstance;
+    }
+
+    void CPUPerf::Init() {
+        if (!sInstance) {
+            sInstance = new CPUPerf();
+            sInstance->Run();
+        }
+    }
+
+    void CPUPerf::Run() {
+        if (mRunning) { return; }
+
+        mRunning = true;
+        mCollectionThread = new std::thread(&CPUPerf::CollectData, this);
+        mCollectionThread->detach();
+        mUpdateTotalProcThread = new std::thread(&CPUPerf::UpdateTotalLoadProc, this);
+        mUpdateTotalProcThread->detach();
+    }
+
+    void CPUPerf::Stop() {
+        mRunning = false;
+    }
+
+    int CPUPerf::GetNumProcessors() const {
+        return (int) mProcessorData.Size;
+    }
+
+    double CPUPerf::GetCurrentLoad() const {
+        if (mCurrentLoadCPU < 0) {
+            return 0.0;
+        }
+        return mCurrentLoadCPU;
+    }
+
+    double CPUPerf::GetCurrentLoadProc() const {
+        if (mCurrentLoadCPU < 0) {
+            return 0.0;
+        }
+        return mCurrentLoadProc;
+    }
+
+    double CPUPerf::GetCurrentLoadTotal() const {
+        if (mCurrentLoadCPU < 0) {
+            return 0.0;
+        }
+        return mCurrentLoadCPU * GetNumProcessors();
+    }
+
+    double CPUPerf::GetCurrentLoadTotalProc() const {
+        if (mCurrentLoadProc < 0) {
+            return 0.0;
+        }
+        return mCurrentLoadProc * GetNumProcessors();
+    }
+
+    std::set<std::pair<int, double>> CPUPerf::GetCurrentLoadAll() const {
+        return mCPUSet;
     }
 
     void CPUPerf::InitData() {
@@ -48,6 +104,18 @@ namespace RESANA {
         if (pdhStatus != ERROR_SUCCESS) {
             RS_CORE_ERROR("PdhAddCounter failed with 0x{0}", pdhStatus);
         }
+    }
+
+    void CPUPerf::InitProc() {
+        FILETIME ftime, fsys, fuser;
+
+        GetSystemTimeAsFileTime(&ftime);
+        memcpy(&mLastCPU, &ftime, sizeof(FILETIME));
+
+        mHandle = GetCurrentProcess();
+        GetProcessTimes(mHandle, &ftime, &ftime, &fsys, &fuser);
+        memcpy(&mLastSysCPU, &fsys, sizeof(FILETIME));
+        memcpy(&mLastUserCPU, &fuser, sizeof(FILETIME));
     }
 
     void CPUPerf::CollectData() {
@@ -112,73 +180,6 @@ namespace RESANA {
         }
     }
 
-    double CPUPerf::CalculateAvgLoad() {
-        double sum = 0;
-        for (auto val: mLoadDeque) {
-            sum += val;
-        }
-        return sum / mLoadDeque.size();
-    }
-
-    std::set<std::pair<int, double>> CPUPerf::GetCurrentLoadAll() const {
-        return mCPUSet;
-    }
-
-    void CPUPerf::Init() {
-        if (!sInstance) {
-            sInstance = new CPUPerf();
-            sInstance->Run();
-        }
-    }
-
-    double CPUPerf::GetCurrentLoad() {
-        if (mCurrentLoadCPU < 0) {
-            return 0.0;
-        }
-        return mCurrentLoadCPU;
-    }
-
-    double CPUPerf::GetCurrentLoadProc() const {
-        if (mCurrentLoadCPU < 0) {
-            return 0.0;
-        }
-        return mCurrentLoadProc;
-    }
-
-    double CPUPerf::GetCurrentLoadTotal() const {
-        if (mCurrentLoadCPU < 0) {
-            return 0.0;
-        }
-        return mCurrentLoadCPU * GetNumProcessors();
-    }
-
-    double CPUPerf::GetCurrentLoadTotalProc() const {
-        if (mCurrentLoadProc < 0) {
-            return 0.0;
-        }
-        return mCurrentLoadProc * GetNumProcessors();
-    }
-
-    int CPUPerf::GetNumProcessors() const {
-        return (int) mProcessorData.Size;
-    }
-
-    void CPUPerf::Run() {
-        if (mRunning) { return; }
-
-        mRunning = true;
-        mCollectionThread = new std::thread(&CPUPerf::CollectData, this);
-        mCollectionThread->detach();
-        // mUpdateTotalThread = new std::thread(&CPUData::UpdateTotalLoad, this);
-        // mUpdateTotalThread->detach();
-        mUpdateTotalProcThread = new std::thread(&CPUPerf::UpdateTotalLoadProc, this);
-        mUpdateTotalProcThread->detach();
-    }
-
-    void CPUPerf::Stop() {
-        mRunning = false;
-    }
-
     void CPUPerf::UpdateTotalLoad() {
         PDH_STATUS pdhStatus = ERROR_SUCCESS;
 
@@ -215,18 +216,6 @@ namespace RESANA {
         }
     }
 
-    void CPUPerf::InitProc() {
-        FILETIME ftime, fsys, fuser;
-
-        GetSystemTimeAsFileTime(&ftime);
-        memcpy(&mLastCPU, &ftime, sizeof(FILETIME));
-
-        mHandle = GetCurrentProcess();
-        GetProcessTimes(mHandle, &ftime, &ftime, &fsys, &fuser);
-        memcpy(&mLastSysCPU, &fsys, sizeof(FILETIME));
-        memcpy(&mLastUserCPU, &fuser, sizeof(FILETIME));
-    }
-
     void CPUPerf::UpdateTotalLoadProc() {
         FILETIME ftime, fsys, fuser;
         ULARGE_INTEGER now, sys, user;
@@ -240,8 +229,7 @@ namespace RESANA {
             GetProcessTimes(mHandle, &ftime, &ftime, &fsys, &fuser);
             memcpy(&sys, &fsys, sizeof(FILETIME));
             memcpy(&user, &fuser, sizeof(FILETIME));
-            percent = (double) (sys.QuadPart - mLastSysCPU.QuadPart) +
-                      (double) (user.QuadPart - mLastUserCPU.QuadPart);
+            percent = (double) (sys.QuadPart - mLastSysCPU.QuadPart) + (double) (user.QuadPart - mLastUserCPU.QuadPart);
             percent /= (double) (now.QuadPart - mLastCPU.QuadPart);
             percent /= GetNumProcessors();
             mLastCPU = now;
@@ -249,6 +237,14 @@ namespace RESANA {
             mLastSysCPU = sys;
             mCurrentLoadProc = percent * 100;
         }
+    }
+
+    double CPUPerf::CalculateAvgLoad() {
+        double sum = 0;
+        for (auto val: mLoadDeque) {
+            sum += val;
+        }
+        return sum / mLoadDeque.size();
     }
 
 } // RESANA
