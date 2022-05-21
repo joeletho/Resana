@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Log.h"
+
 #include <Windows.h>
 #include <strsafe.h>
 
@@ -35,6 +37,30 @@ namespace RESANA {
 
         LocalFree(lpMsgBuf);
         LocalFree(lpDisplayBuf);
+    }
+
+    void PrintWin32Error(const TCHAR *msg) {
+        DWORD eNum;
+        TCHAR sysMsg[256];
+        TCHAR *p;
+
+        eNum = GetLastError();
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                      nullptr, eNum,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+                      sysMsg, 256, nullptr);
+
+        // Trim the end of the line and terminate it with a null
+        p = sysMsg;
+        while ((*p > 31) || (*p == 9)) {
+            ++p;
+        }
+        do { *p-- = 0; }
+        while ((p >= sysMsg) &&
+               ((*p == '.') || (*p < 33)));
+
+        // Display the message
+        RS_CORE_WARN("  WARNING: {0} failed with error {1} ({2})", msg, eNum, sysMsg);
     }
 
 }
