@@ -6,6 +6,7 @@
 #include "Log.h"
 
 #include "perfdata/PerfManager.h"
+#include "proc/ProcessManager.h"
 
 namespace RESANA {
 
@@ -20,6 +21,7 @@ namespace RESANA {
 
         // Start statics
         PerfManager::Init();
+        ProcessManager::Init();
         Renderer::Init();
 
         mImGuiLayer = new ImGuiLayer();
