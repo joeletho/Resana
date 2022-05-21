@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Layer.h"
+#include "panels/ResourcePanel.h"
 
 namespace RESANA {
 
@@ -21,7 +22,9 @@ namespace RESANA {
 
     private:
         float mTime = 0.0f;
-    };
+
+        ResourcePanel* mResourcePanel = nullptr;
+};
 
 } // RESANA
 
