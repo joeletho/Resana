@@ -351,14 +351,6 @@ namespace RESANA {
 
 	std::vector<CPUPerformance::counterValueItem*> CPUPerformance::GetProcessors()
 	{
-		//RS_CORE_ASSERT(!mLock.owns_lock(),
-		//	"CPUPerformance instance is already locked! Did you forget to call 'CPUPerformance::Release()'?");
-
-		//while (sDataInUse && !sDataReady) { Sleep(1); }
-
-		//sInstance->mLock;
-		//sDataInUse = true;
-
 		return mProcessorData->Processors;
 	}
 
