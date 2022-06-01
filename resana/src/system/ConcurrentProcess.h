@@ -25,7 +25,7 @@ namespace RESANA {
 
 	private:
 		std::string mDebugName;
-		//std::condition_variable mProcCondition;
+		std::condition_variable mProcCondition;
 	};
 
 }

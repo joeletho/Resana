@@ -17,18 +17,18 @@ namespace RESANA {
 		mProcCondition.notify_all();
 	}
 
-	void ConcurrentProcess::Wait(std::unique_lock<std::mutex>& lock, bool condition)
-	{
-		mProcCondition.wait(lock, [condition]() { return condition; });
-	}
+	//void ConcurrentProcess::Wait(std::unique_lock<std::mutex>& lock, bool condition)
+	//{
+	//	mProcCondition.wait(lock, [condition]() { return condition; });
+	//}
 
-	void ConcurrentProcess::WaitFor(std::unique_lock<std::mutex>& lock, unsigned int milliseconds, bool condition)
-	{
-		while (!condition)
-		{
-			Sleep(milliseconds);
-			mProcCondition.wait(lock, [condition]() { return condition; });
-		}
-	}
+	//void ConcurrentProcess::WaitFor(std::unique_lock<std::mutex>& lock, unsigned int milliseconds, bool condition)
+	//{
+	//	while (!condition)
+	//	{
+	//		Sleep(milliseconds);
+	//		mProcCondition.wait(lock, [condition]() { return condition; });
+	//	}
+	//}
 
 }
