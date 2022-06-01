@@ -16,14 +16,16 @@ namespace RESANA {
 	protected:
 		void NotifyOne();
 		void NotifyAll();
-		void Wait(std::unique_lock<std::mutex>& lock, bool condition);
-		void WaitFor(std::unique_lock<std::mutex>& lock, unsigned int milliseconds, bool condition);
 
-		inline std::condition_variable& GetCV() { return mProcCondition; };
+		// TODO: Get this working
+		//void Wait(std::unique_lock<std::mutex>& lock, bool condition);
+		//void WaitFor(std::unique_lock<std::mutex>& lock, unsigned int milliseconds, bool condition);
+
+		//inline std::condition_variable& GetCV() { return mProcCondition; };
 
 	private:
 		std::string mDebugName;
-		std::condition_variable mProcCondition;
+		//std::condition_variable mProcCondition;
 	};
 
 }
