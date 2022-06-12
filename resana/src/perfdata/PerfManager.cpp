@@ -1,32 +1,29 @@
 #include "PerfManager.h"
+#include <rspch.h>
 
-namespace RESANA {
+#include <memory>
+
+namespace RESANA 
+{
 
     PerfManager *PerfManager::sInstance = nullptr;
 
-    void PerfManager::Init() {
-        PerfManager();
-    }
-
-    PerfManager::PerfManager() {
+    void PerfManager::Init() 
+    {
         if (!sInstance) {
-            sInstance = this;
+            sInstance = new PerfManager();
         }
-        MemoryPerf::Init();
-        CPUPerf::Init();
     }
 
-    PerfManager::~PerfManager() {
+    PerfManager::PerfManager() 
+    {
+        mMemoryPerf = std::make_shared<MemoryPerf>();
+    }
+
+    PerfManager::~PerfManager() 
+    {
         sInstance = nullptr;
         delete sInstance;
-    }
-
-    MemoryPerf *PerfManager::GetMemory() {
-        return MemoryPerf::sInstance;
-    }
-
-    CPUPerf *PerfManager::GetCPU() {
-        return CPUPerf::sInstance;
     }
 
 } // RESANA

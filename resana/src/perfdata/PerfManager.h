@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MemoryPerf.h"
-#include "CPUPerf.h"
 
 #include <thread>
 
@@ -9,19 +8,21 @@ namespace RESANA {
 
     class MemoryPerf;
 
-    class CPUPerf;
 
     class PerfManager {
     public:
         static void Init();
-        static MemoryPerf *GetMemory();
-        static CPUPerf *GetCPU();
+
+        std::shared_ptr<MemoryPerf> GetMemory() { return mMemoryPerf; };
+
+        static PerfManager *Get() { return sInstance; }
 
     private:
         PerfManager();
         ~PerfManager();
 
     private:
+        std::shared_ptr<MemoryPerf> mMemoryPerf;
         static PerfManager *sInstance;
     };
 
