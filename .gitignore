@@ -9,3 +9,8 @@
 **.ilk
 **.pdb
 cmake-*
+.scratch/
+out/
+.vs/
+bin/pingme.txt
+bin/ResourcePanel.obj
