@@ -1,6 +1,7 @@
 #include "rspch.h"
 #include "CPUPerformance.h"
 
+#include "core/Core.h"
 #include "core/Application.h"
 
 #include <Windows.h>
@@ -10,67 +11,61 @@
 
 namespace RESANA {
 
-	bool CPUPerformance::sDataInUse = false;
-	bool CPUPerformance::sDataReady = false;
 	CPUPerformance* CPUPerformance::sInstance = nullptr;
 
-	CPUPerformance::CPUPerformance() : ConcurrentProcess("CPUPerformance") 
+	CPUPerformance::CPUPerformance() : ConcurrentProcess("CPUPerformance")
 	{
-		mLock = std::unique_lock<std::mutex>(mMutex, std::defer_lock);
+		mProcessorData.reset(new ProcessorData);
 	}
 
-	CPUPerformance::~CPUPerformance() = default;
-
-	CPUPerformance* CPUPerformance::Get()
+	CPUPerformance::~CPUPerformance()
 	{
-		if (!sInstance) {
-			sInstance = new CPUPerformance();
-			sInstance->InitCPUData();
-			sInstance->InitProcessData();
-			sInstance->Start();
+		Sleep(1000); // Let detached threads finish before destructing
+
+		auto& lc = GetLockContainer();
+		auto& writeLock = lc.GetWriteLock();
+		auto& readLock = lc.GetReadLock();
+
+		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+
+		writeLock.lock();
+		lc.Wait(writeLock, !readLock.owns_lock());
+
+		mProcessorData->Destory();
+
+		while (!mDataQueue.empty()) {
+			auto p = mDataQueue.front();
+			mDataQueue.pop();
+			p->Destory();
 		}
 
-		return sInstance;
+		sInstance = nullptr;
 	}
 
-	void CPUPerformance::Release() {
-		//RS_CORE_ASSERT(sInstance->mLock.owns_lock(),
-		//	"CPUPerformance instance is not locked! Did you forget to call 'CPUPerformance::Get()'?");
-
-		//sInstance->mLock.unlock();
-		//sDataInUse = false;
-	}
-
-	bool CPUPerformance::InitCPUData()
+	void CPUPerformance::InitCPUData()
 	{
 		PDH_STATUS pdhStatus = ERROR_SUCCESS;
 		SYSTEM_INFO sysInfo;
-		GetSystemInfo(&sysInfo);
 
-		mProcessorData.reset(new ProcessorData);
-		mProcessorData->Size = mNumProcessors = sysInfo.dwNumberOfProcessors;
+		GetSystemInfo(&sysInfo);
+		mNumProcessors = sysInfo.dwNumberOfProcessors;
 
 		pdhStatus = PdhOpenQuery(nullptr, 0, &mCPUCounter.Query);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
+		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhOpenQuery failed with 0x{0}", pdhStatus);
-			return false;
 		}
 
 		// Specify a counter object with a wildcard for the instance.
 		pdhStatus = PdhAddCounter(mCPUCounter.Query, TEXT("\\Processor(*)\\% Processor Time"), 0, &mCPUCounter.Counter);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
+		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhAddCounter failed with 0x{0}", pdhStatus);
-			return false;
 		}
-
-		return true;
 	}
 
-	bool CPUPerformance::InitProcessData()
+	void CPUPerformance::InitProcessData()
 	{
 		FILETIME ftime, fsys, fuser;
+
 		GetSystemTimeAsFileTime(&ftime);
 		memcpy(&mProcCounter.Last, &ftime, sizeof(FILETIME));
 
@@ -78,170 +73,81 @@ namespace RESANA {
 		GetProcessTimes(mProcCounter.Handle, &ftime, &ftime, &fsys, &fuser);
 		memcpy(&mProcCounter.LastSys, &fsys, sizeof(FILETIME));
 		memcpy(&mProcCounter.LastUser, &fuser, sizeof(FILETIME));
-
-		return true;
 	}
 
-	void CPUPerformance::Start()
+	void CPUPerformance::Run()
 	{
-		if (!mRunning)
-		{
-			mThreads.push_back(std::thread(&CPUPerformance::DataPreparationThread, this));
-			mThreads.push_back(std::thread(&CPUPerformance::DataExtractionThread, this));
-			mThreads.push_back(std::thread(&CPUPerformance::CalcProcessLoadThread, this));
+		if (!sInstance) {
+			sInstance = Get();
+		}
 
-			mRunning = true;
+		if (!sInstance->mRunning)
+		{
+			sInstance->mThreads.push_back(std::thread([&] { sInstance->PrepareDataThread(); }));
+			sInstance->mThreads.back().detach();
+			sInstance->mThreads.push_back(std::thread([&] { sInstance->ExtractDataThread(); }));
+			sInstance->mThreads.back().detach();
+			sInstance->mThreads.push_back(std::thread([&] { sInstance->CalcProcessLoadThread(); }));
+			sInstance->mThreads.back().detach();
+
+			sInstance->mRunning = true;
 		}
 	}
 
 	void CPUPerformance::Stop()
 	{
-		if (mRunning)
+		if (sInstance && sInstance->mRunning)
 		{
-			mRunning = false;
+			sInstance->mRunning = false;
 
-			for (auto& th : mThreads) { th.join(); }
+			std::thread kill([&]() { sInstance->Terminate(); });
+			kill.detach();
 		}
 	}
 
-	void CPUPerformance::DataPreparationThread()
+	void CPUPerformance::Terminate()
 	{
-		while (mRunning) { PrepareDataFunction(); }
+		mRunning = false;
+		this->~CPUPerformance();
 	}
 
-	void CPUPerformance::PrepareDataFunction()
+	CPUPerformance* CPUPerformance::Get()
 	{
-		std::mutex mutex;
-		PDH_STATUS pdhStatus = ERROR_SUCCESS;
-		ProcessorData* data = new ProcessorData();
-
-		// Some counters need two samples in order to format a value, so
-		// make this call to get the first value before entering the loop.
-		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
-		if (pdhStatus != ERROR_SUCCESS)
+		if (!sInstance) 
 		{
-			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
+			sInstance = new CPUPerformance();
+			sInstance->InitCPUData();
+			sInstance->InitProcessData();
 		}
 
-		Time::Sleep(1000); // Sleep for 1 second
-
-		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
-			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
-		}
-
-		// Get the required size of the data buffer.
-		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
-			&data->Buffer, &data->Size, data->ArrayRef);
-
-		if (pdhStatus != PDH_MORE_DATA)
-		{
-			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
-		}
-
-		data->ArrayRef = (counterValueItem*)malloc(data->Buffer);
-		if (!data->ArrayRef)
-		{
-			RS_CORE_ERROR("malloc for PdhGetFormattedCounterArray failed 0x{0}",
-				pdhStatus);
-		}
-
-		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
-			&data->Buffer, &data->Size, data->ArrayRef);
-
-		if (pdhStatus != ERROR_SUCCESS)
-		{
-			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
-		}
-
-		while (sDataInUse) { SleepEx(1, false); }
-
-		std::lock(mutex, mMutex);
-		sDataInUse = true;
-		{
-			std::lock_guard<std::mutex> lock1(mutex, std::adopt_lock);
-			std::lock_guard<std::mutex> lock2(mMutex, std::adopt_lock);
-
-			mDataQueue.push(data);
-			mDataPrepared = true;
-		}
-		sDataInUse = false;
+		return sInstance;
 	}
 
-	void CPUPerformance::DataExtractionThread()
+	std::shared_ptr<ProcessorData> CPUPerformance::GetData()
 	{
-		while (mRunning)
-		{
-			if (mDataPrepared) { ExtractDataFunction(); }
-			else { Sleep(100); }
-		}
+		RS_CORE_ASSERT(mRunning, "Process is not currently running! Call 'CPUPerformance::Run()' to start process.");
+
+		if (!mDataReady) { return {}; }
+
+		auto& lc = GetLockContainer();
+		auto& readLock = lc.GetReadLock();
+		auto& writeLock = lc.GetWriteLock();
+
+		readLock.lock();
+		lc.Wait(readLock, !writeLock.owns_lock()); // Don't read the data when it's being set!
+		lc.NotifyAll();
+
+		return mProcessorData;
 	}
 
-	void CPUPerformance::ExtractDataFunction()
+	double CPUPerformance::GetAverageLoad() const
 	{
-		std::mutex mutex;
-		ProcessorData* data = nullptr;
-
-		while (sDataInUse) { Sleep(1); }
-
-		std::lock(mutex, mMutex);
-		sDataInUse = true;
-		{
-			std::lock_guard<std::mutex> lock1(mutex, std::adopt_lock);
-			std::lock_guard<std::mutex> lock2(mMutex, std::adopt_lock);
-
-			data = mDataQueue.front();
-			mDataQueue.pop();
-			mDataPrepared = false;
-		}
-		sDataInUse = false;
-
-		std::thread processThread(&CPUPerformance::ProcessDataThread, this, std::ref(data));
-		processThread.join();
-
-		while (sDataInUse) { SleepEx(1, false); }
-
-		std::lock(mutex, mMutex);
-		sDataInUse = true;
-		{
-			std::lock_guard<std::mutex> lock1(mutex, std::adopt_lock);
-			std::lock_guard<std::mutex> lock2(mMutex, std::adopt_lock);
-
-			SetData(data);
-		}
-		sDataInUse = false;
+		return mCPULoadAvg > 0.0 ? mCPULoadAvg : 0.0;
 	}
 
-	void CPUPerformance::ProcessDataThread(ProcessorData* data)
+	int CPUPerformance::GetNumProcessors() const
 	{
-		if (!data) { return; }
-
-		// Loop through the array and add _Total to deque and cpu values into the local vector
-		for (DWORD i = 0; i < data->Size; ++i)
-		{
-			auto processor = new counterValueItem(data->ArrayRef[i]);
-			auto name = processor->szName;
-			auto value = processor->FmtValue.doubleValue;
-
-			if (std::strcmp(name, "_Total") == 0)
-			{
-				// Put the total into a deque to compute the average
-				if (mCPULoadValues.size() == MAX_LOAD_COUNT)
-				{
-					mCPULoadValues.pop_front();
-				}
-
-				mCPULoadValues.push_back(value);
-				mCPULoadAvg = CalculateAverage(mCPULoadValues);
-			}
-			else
-			{
-				data->Processors.push_back(processor);
-			}
-		}
-
-		data->Processors = SortAscending(data->Processors);
+		return mNumProcessors;
 	}
 
 	double CPUPerformance::GetCurrentLoad()
@@ -250,22 +156,19 @@ namespace RESANA {
 		PDH_FMT_COUNTERVALUE countervalue;
 
 		pdhStatus = PdhOpenQuery(nullptr, 0, &mLoadCounter.Query);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
+		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhOpenQuery failed with 0x{0}", pdhStatus);
 		}
 
 		// Specify a counter object with a wildcard for the instance.
 		pdhStatus = PdhAddCounter(mLoadCounter.Query,
 			TEXT("\\Processor(_Total)\\% Processor Time"), 0, &mLoadCounter.Counter);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
+		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhAddCounter failed with 0x{0}", pdhStatus);
 		}
 
 		pdhStatus = PdhCollectQueryData(mLoadCounter.Query);
-		if (pdhStatus != ERROR_SUCCESS)
-		{
+		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 		}
 
@@ -281,29 +184,176 @@ namespace RESANA {
 				RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 			}
 		}
-		else
-		{
+		else {
 			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 		}
 
-		return countervalue.doubleValue;
+		return countervalue.doubleValue > 0.0 ? countervalue.doubleValue : 0.0;
+	}
+
+	double CPUPerformance::GetCurrentProcessLoad() const
+	{
+		return mProcessLoad > 0.0 ? mProcessLoad : 0.0;
+	}
+
+	void CPUPerformance::ReleaseData()
+	{
+		auto& lc = GetLockContainer();
+		auto& readLock = lc.GetReadLock();
+
+		readLock.unlock();
+		lc.NotifyAll();
+	}
+
+	void CPUPerformance::PrepareDataThread()
+	{
+		while (mRunning) { auto data = PrepareData(); PushData(data); }
+	}
+
+	void CPUPerformance::ExtractDataThread()
+	{
+		while (mRunning)
+		{
+			auto data = ExtractData();
+
+			if (data)
+			{
+				ProcessData(data);
+				SortAscending(data->Processors);
+				SetData(data);
+			}
+		}
+	}
+
+	ProcessorData* CPUPerformance::PrepareData()
+	{
+		PDH_STATUS pdhStatus = ERROR_SUCCESS;
+		auto data = new ProcessorData();
+		bool success = true;
+
+		// Some counters need two samples in order to format a value, so
+		// make this call to get the first value before entering the loop.
+		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
+		if (pdhStatus != ERROR_SUCCESS) {
+			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
+			success = false;
+		}
+
+		Time::Sleep(1000); // Sleep for 1 second on this thread.
+
+		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
+		if (pdhStatus != ERROR_SUCCESS) {
+			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
+			success = false;
+		}
+
+		// Get the required size of the data buffer.
+		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
+			&data->Buffer, &data->Size, data->ArrayRef);
+
+		if (pdhStatus != PDH_MORE_DATA) {
+			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
+			success = false;
+		}
+
+		data->ArrayRef = (PdhCounterValueItem*)malloc(data->Buffer);
+		if (!data->ArrayRef) {
+			RS_CORE_ERROR("malloc for PdhGetFormattedCounterArray failed 0x{0}", pdhStatus);
+			success = false;
+		}
+
+		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
+			&data->Buffer, &data->Size, data->ArrayRef);
+
+		if (pdhStatus != ERROR_SUCCESS) {
+			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
+			success = false;
+		}
+
+		// In case of an error, free the memory
+		if (!success) {
+			delete data;
+			data = nullptr;
+		}
+
+		return data;
+	}
+
+	void CPUPerformance::PushData(ProcessorData* data)
+	{
+		if (!data) { return; }
+
+		auto& lc = GetLockContainer();
+		auto& writeLock = lc.GetWriteLock();
+
+		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		writeLock.lock();
+
+		mDataQueue.push(data);
+
+		writeLock.unlock();
+		lc.NotifyAll();
+	}
+
+	ProcessorData* CPUPerformance::ExtractData()
+	{
+		auto& lc = GetLockContainer();
+		auto& writeLock = lc.GetWriteLock();
+
+		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+
+		writeLock.lock();
+		while (mDataQueue.empty()) { lc.Wait(writeLock); }
+
+		auto data = mDataQueue.front();
+		mDataQueue.pop();
+
+		writeLock.unlock();
+		lc.NotifyAll();
+
+		return data;
+	}
+
+	void CPUPerformance::ProcessData(ProcessorData* data)
+	{
+		if (data->ArrayRef == NULL) { return; }
+
+		// Loop through the array and add _Total to deque and cpu values into the local vector
+		for (DWORD i = 0; i < data->Size; ++i)
+		{
+			auto processor = new PdhCounterValueItem(data->ArrayRef[i]);
+			if (!processor) { continue; }
+
+			auto name = processor->szName;
+			auto value = processor->FmtValue.doubleValue;
+
+			if (std::strcmp(name, "_Total") == 0)
+			{
+				// Put the total into a deque to compute the average
+				if (mCPULoadValues.size() == MAX_LOAD_COUNT) {
+					mCPULoadValues.pop_front();
+				}
+
+				mCPULoadValues.push_back(value);
+				mCPULoadAvg = CalculateAverage(mCPULoadValues);
+			}
+			else {
+				// Add the processor
+				data->Processors.push_back(processor);
+			}
+		}
 	}
 
 	void CPUPerformance::CalcProcessLoadThread()
 	{
-		while (mRunning)
-		{
-			CalcProcFunction();
-			Sleep(1000);
-		}
+		while (mRunning) { CalcProcessLoad(); Sleep(1000); }
 	}
 
-	void CPUPerformance::CalcProcFunction()
+	void CPUPerformance::CalcProcessLoad()
 	{
 		FILETIME ftime, fsys, fuser;
 		ULARGE_INTEGER now, sys, user;
 		double percent;
-		std::mutex mutex{};
 
 		GetSystemTimeAsFileTime(&ftime);
 		memcpy(&now, &ftime, sizeof(FILETIME));
@@ -315,43 +365,41 @@ namespace RESANA {
 		percent /= (double)(now.QuadPart - mProcCounter.Last.QuadPart);
 		percent /= GetNumProcessors();
 
-		while (sDataInUse) { SleepEx(1, false); }
-
-		std::lock(mutex, mMutex);
-		sDataInUse = true;
-		{
-			std::lock_guard<std::mutex> lock1(mutex, std::adopt_lock);
-			std::lock_guard<std::mutex> lock2(mMutex, std::adopt_lock);
-
-			mProcCounter.Last = now;
-			mProcCounter.LastUser = user;
-			mProcCounter.LastSys = sys;
-			mProcessLoad = percent * 100;
-		}
-		sDataInUse = false;
+		mProcCounter.Last = now;
+		mProcCounter.LastUser = user;
+		mProcCounter.LastSys = sys;
+		mProcessLoad = percent * 100;
 	}
 
 	void CPUPerformance::SetData(ProcessorData* data)
 	{
-		sDataReady = false;
-		mProcessorData.reset(std::move(data));
-		sDataReady = true;
+		if (!data) { return; }
+
+		auto& lc = GetLockContainer();
+		auto& writeLock = lc.GetWriteLock();
+		auto& readLock = lc.GetReadLock();
+
+		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		writeLock.lock();
+
+		mDataReady = false;
+		lc.NotifyAll(); // Notify all that the state has changed
+
+		mProcessorData->Destory();
+		mProcessorData.reset(data);
+		mDataReady = true;
+
+		writeLock.unlock();
+		lc.NotifyAll();
 	}
 
-	std::vector<CPUPerformance::counterValueItem*> CPUPerformance::SortAscending(std::vector<counterValueItem*> processors)
+	std::vector<PdhCounterValueItem*>& CPUPerformance::SortAscending(std::vector<PdhCounterValueItem*>& processors)
 	{
-		std::sort(processors.begin(), processors.end(),
-			[&](counterValueItem* left, counterValueItem* right)
-			{
-				return std::stoi(left->szName) < std::stoi(right->szName);
+		std::sort(processors.begin(), processors.end(), [&](PdhCounterValueItem* left, PdhCounterValueItem* right) {
+			return std::stoi(left->szName) < std::stoi(right->szName); 
 			});
 
 		return processors;
-	}
-
-	std::vector<CPUPerformance::counterValueItem*> CPUPerformance::GetProcessors()
-	{
-		return mProcessorData->Processors;
 	}
 
 	template<typename T>
@@ -359,6 +407,7 @@ namespace RESANA {
 	{
 		T sum = 0;
 		for (auto val : values) { sum += val; }
+
 		return sum / values.size();
 	}
 
