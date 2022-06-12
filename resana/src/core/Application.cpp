@@ -6,69 +6,74 @@
 #include "Log.h"
 
 #include "perfdata/PerfManager.h"
-#include "proc/ProcessManager.h"
 
 namespace RESANA {
 
-    Application *Application::sInstance = nullptr;
+	Application* Application::sInstance = nullptr;
 
-    Application::Application() {
-        RS_CORE_ASSERT(!sInstance, "Application already exists!");
-        sInstance = this;
-        mRunning = true;
+	Application::Application()
+	{
+		RS_CORE_ASSERT(!sInstance, "Application already exists!");
+		sInstance = this;
+		mRunning = true;
 
-        mWindow = std::unique_ptr<Window>(Window::Create());
+		mWindow = std::unique_ptr<Window>(Window::Create());
 
-        // Start statics
-        PerfManager::Init();
-        ProcessManager::Init();
-        Renderer::Init();
+		// Start statics
+		PerfManager::Init();
+		Renderer::Init();
 
-        mImGuiLayer = new ImGuiLayer();
-        PushLayer(mImGuiLayer);
+		mImGuiLayer = new ImGuiLayer();
+		PushLayer(mImGuiLayer);
+	}
 
-    }
-
-    Application::~Application() = default;
+	Application::~Application() = default;
 
 
-    void Application::PushLayer(Layer *layer) {
-        mLayerStack.PushLayer(layer);
-        layer->OnAttach();
-    }
+	void Application::PushLayer(Layer* layer)
+	{
+		mLayerStack.PushLayer(layer);
+		layer->OnAttach();
+	}
 
-    void Application::Run() {
+	void Application::Run()
+	{
+		while (mRunning)
+		{
+			// Check if window has been closed
+			mRunning = !glfwWindowShouldClose((GLFWwindow*)mWindow->GetNativeWindow());
 
-        while (mRunning) {
-            // Check if window has been closed
-            mRunning = !glfwWindowShouldClose((GLFWwindow *) mWindow->GetNativeWindow());
+			if (!IsMinimized())
+			{
+				for (Layer* layer : mLayerStack) {
+					layer->OnUpdate();
+				}
 
-            mMinimized = (mWindow->GetWidth() == 0 || mWindow->GetHeight() == 0);
-            if (!mMinimized) {
-                for (Layer *layer: mLayerStack) {
-                    layer->OnUpdate();
-                }
-            }
+				ImGuiLayer::Begin();
+				for (Layer* layer : mLayerStack) {
+					layer->OnImGuiRender();
+				}
+				ImGuiLayer::End();
+			}
 
-            ImGuiLayer::Begin();
-            for (Layer *layer: mLayerStack) {
-                layer->OnImGuiRender();
-            }
-            ImGuiLayer::End();
+			mWindow->Update();
+		}
 
-            mWindow->Update();
-        }
+		// Clean up
+		glfwDestroyWindow((GLFWwindow*)mWindow->GetNativeWindow());
+		glfwTerminate();
+		glfwSetErrorCallback(nullptr);
+	}
 
-        // Clean up
-        glfwDestroyWindow((GLFWwindow *) mWindow->GetNativeWindow());
-        glfwTerminate();
-        glfwSetErrorCallback(nullptr);
-    }
+	void Application::Terminate()
+	{
+		mRunning = false;
+	}
 
-    void Application::Terminate() {
-        mRunning = false;
-    }
-
+	bool Application::IsMinimized() const
+	{
+		return mWindow->GetWidth() == 0 || mWindow->GetHeight() == 0;
+	}
 
 } // RESANA
 
@@ -77,12 +82,13 @@ namespace RESANA {
 // -----------------------------------------------------------------
 // [[ENTRY POINT]]
 // -----------------------------------------------------------------
-int main(int argc, char **argv) {
-    RESANA::Log::Init();
+int main(int argc, char** argv)
+{
+	RESANA::Log::Init();
 
-    RS_CORE_WARN("Application initialized!");
+	RS_CORE_WARN("Application initialized!");
 
-    auto *app = new RESANA::Application;
-    app->Run();
-    delete app;
+	auto* app = new RESANA::Application;
+	app->Run();
+	delete app;
 }

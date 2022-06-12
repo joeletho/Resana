@@ -15,6 +15,7 @@ namespace RESANA {
         void PushLayer(Layer *layer);
         void Run();
         void Terminate();
+        bool IsMinimized() const;
 
         inline Window &GetWindow() { return *mWindow; }
 

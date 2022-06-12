@@ -49,9 +49,9 @@ namespace RESANA {
         int status = gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
         RS_CORE_ASSERT(status, "Failed to initialize glad!");
         RS_CORE_INFO("OpenGL info: ");
-        RS_CORE_INFO("   Vendor: {0}", glGetString(GL_VENDOR));
-        RS_CORE_INFO("   Renderer: {0}", glGetString(GL_RENDERER));
-        RS_CORE_INFO("   Version: {0}", glGetString(GL_VERSION));
+        RS_CORE_INFO("\tVendor: {0}", glGetString(GL_VENDOR));
+        RS_CORE_INFO("\tRenderer: {0}", glGetString(GL_RENDERER));
+        RS_CORE_INFO("\tVersion: {0}", glGetString(GL_VERSION));
 
         SetVSync(true);
         glfwShowWindow(mWindow);
