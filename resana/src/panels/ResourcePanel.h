@@ -2,24 +2,25 @@
 
 #include "Panel.h"
 #include "perfdata/MemoryPerf.h"
-#include "perfdata/CPUPerf.h"
+#include "system/CPUPerformance.h"
 
-namespace RESANA {
+namespace RESANA
+{
+	class ResourcePanel : public Panel
+	{
+	public:
+		ResourcePanel();
+		~ResourcePanel() override;
 
-    class ResourcePanel : public Panel {
-    public:
-        ResourcePanel();
-        ~ResourcePanel() override;
+		void ShowPanel(bool* pOpen) override;
 
-        void ShowPanel(bool* pOpen) override;
-
-    private:
-        void ShowPhysicalMemoryTable();
-        void ShowVirtualMemoryTable();
-        void ShowCPUTable();
-    private:
-        MemoryPerf* mMemoryInfo = nullptr;
-        CPUPerf* mCPUInfo = nullptr;
-    };
+	private:
+		void ShowPhysicalMemoryTable();
+		void ShowVirtualMemoryTable();
+		void ShowCPUTable();
+	private:
+		std::shared_ptr<MemoryPerf> mMemoryInfo;
+		CPUPerformance* mCPUInfo = nullptr;
+	};
 
 } // RESANA
