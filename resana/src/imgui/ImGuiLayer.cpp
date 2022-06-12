@@ -45,7 +45,7 @@ namespace RESANA
 		ImGui_ImplOpenGL3_Init("#version 460 core");
 
 		mResourcePanel = new ResourcePanel();
-		mProcessesPanel = new ProcessesPanel();
+		mProcessPanel = new ProcessPanel();
 	}
 
 	void ImGuiLayer::OnDetach()
@@ -146,7 +146,7 @@ namespace RESANA
 
 		static bool showDemo = false;
 		static bool showResourcePanel = false;
-		static bool showProcessesPanel = false;
+		static bool showProcessPanel = false;
 
 		if (ImGui::BeginMainMenuBar())
 		{
@@ -161,7 +161,7 @@ namespace RESANA
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::MenuItem("Resource Manager", nullptr, &showResourcePanel);
-				ImGui::MenuItem("Processes", nullptr, &showProcessesPanel);
+				ImGui::MenuItem("Process", nullptr, &showProcessPanel);
 				ImGui::MenuItem("ImGui Demo", nullptr, &showDemo);
 				ImGui::EndMenu();
 			}
@@ -173,7 +173,7 @@ namespace RESANA
 		}
 
 		mResourcePanel->ShowPanel(&showResourcePanel);
-		mProcessesPanel->ShowPanel(&showProcessesPanel);
+		mProcessPanel->ShowPanel(&showProcessPanel);
 	}
 
 } // RESANA

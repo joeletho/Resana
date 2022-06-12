@@ -3,7 +3,7 @@
 #include "core/Layer.h"
 
 #include "panels/ResourcePanel.h"
-#include "panels/ProcessesPanel.h"
+#include "panels/ProcessPanel.h"
 
 namespace RESANA
 {
@@ -27,7 +27,7 @@ namespace RESANA
 		float mTime = 0.0f;
 
 		ResourcePanel* mResourcePanel = nullptr;
-		ProcessesPanel* mProcessesPanel = nullptr;
+		ProcessPanel* mProcessPanel = nullptr;
 	};
 
 } // RESANA
