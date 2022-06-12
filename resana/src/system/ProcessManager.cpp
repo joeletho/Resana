@@ -21,13 +21,14 @@ namespace RESANA {
 	{
 		Sleep(1000); // Let detached threads finish before destructing
 
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
+
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 		auto& readLock = lc.GetReadLock();
 
-		while (writeLock.owns_lock()) {
-			lc.Wait(writeLock);
-		}
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
 
 		writeLock.lock();
 		lc.Wait(writeLock, !readLock.owns_lock());
@@ -160,17 +161,17 @@ namespace RESANA {
 
 	void ProcessManager::SetData(ProcessArray* data)
 	{
-
 		if (!data) { return; }
+
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
 
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 		auto& readLock = lc.GetReadLock();
 
-		while (writeLock.owns_lock())
-		{
-			lc.Wait(writeLock);
-		}
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
+
 		writeLock.lock();
 		lc.Wait(writeLock, !readLock.owns_lock()); // Don't set the data while it's being read!
 

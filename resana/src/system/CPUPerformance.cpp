@@ -22,11 +22,14 @@ namespace RESANA {
 	{
 		Sleep(1000); // Let detached threads finish before destructing
 
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
+
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 		auto& readLock = lc.GetReadLock();
 
-		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
 
 		writeLock.lock();
 		lc.Wait(writeLock, !readLock.owns_lock());
@@ -283,10 +286,13 @@ namespace RESANA {
 	{
 		if (!data) { return; }
 
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
+
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 
-		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
 		writeLock.lock();
 
 		mDataQueue.push(data);
@@ -297,10 +303,13 @@ namespace RESANA {
 
 	ProcessorData* CPUPerformance::ExtractData()
 	{
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
+
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 
-		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
 
 		writeLock.lock();
 		while (mDataQueue.empty()) { lc.Wait(writeLock); }
@@ -375,11 +384,14 @@ namespace RESANA {
 	{
 		if (!data) { return; }
 
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock(mutex);
+
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
 		auto& readLock = lc.GetReadLock();
 
-		while (writeLock.owns_lock()) { lc.Wait(writeLock); }
+		while (writeLock.owns_lock()) { lc.Wait(lock); }
 		writeLock.lock();
 
 		mDataReady = false;
