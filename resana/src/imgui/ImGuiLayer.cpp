@@ -7,7 +7,8 @@
 
 #include <imgui.h>
 
-namespace RESANA {
+namespace RESANA 
+{
 
 	ImGuiLayer::ImGuiLayer()
 		: Layer("ImGuiLayer") {}
@@ -44,7 +45,6 @@ namespace RESANA {
 		ImGui_ImplOpenGL3_Init("#version 460 core");
 
 		mResourcePanel = new ResourcePanel();
-
 		mProcessesPanel = new ProcessesPanel();
 	}
 
@@ -145,7 +145,7 @@ namespace RESANA {
 		ShowImGuiDockspace();
 
 		static bool showDemo = false;
-		static bool showResourcePanel = true;
+		static bool showResourcePanel = false;
 		static bool showProcessesPanel = false;
 
 		if (ImGui::BeginMainMenuBar())
@@ -157,6 +157,7 @@ namespace RESANA {
 				}
 				ImGui::EndMenu();
 			}
+
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::MenuItem("Resource Manager", nullptr, &showResourcePanel);
@@ -170,18 +171,9 @@ namespace RESANA {
 		if (showDemo) {
 			ImGui::ShowDemoWindow(&showDemo);
 		}
+
 		mResourcePanel->ShowPanel(&showResourcePanel);
 		mProcessesPanel->ShowPanel(&showProcessesPanel);
-
-		// static bool show_bkg_col_win = false;
-		// if (ImGui::Begin("Background Color", &show_bkg_col_win)) {
-		//     static float color[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-		//     {
-		//         ImGui::SliderFloat4("Color", color, 0, 1.0f);
-		//         // ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(color[0], color[1], color[2], color[3]));
-		//     }
-		// }
-		// ImGui::End();
 	}
 
 } // RESANA
