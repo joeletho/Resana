@@ -1,16 +1,24 @@
-//
-// Created by Joel on 5/21/2022.
-//
+#pragma once
 
-#ifndef RESANA_PROCESSPANEL_H
-#define RESANA_PROCESSPANEL_H
+#include "Panel.h"
+
+#include "system/ProcessManager.h"
 
 namespace RESANA {
 
-class ProcessPanel {
+	class ProcessPanel : public Panel
+	{
+	public:
+		ProcessPanel();
+		~ProcessPanel() override = default;
 
-};
+		void ShowPanel(bool* pOpen) override;
+
+	private:
+		void ShowProcessTable();
+
+	private:
+		ProcessManager* mProcessManager = nullptr;
+	};
 
 } // RESANA
-
-#endif //RESANA_PROCESSPANEL_H
