@@ -1,89 +1,110 @@
+#include "rspch.h"
 #include "MemoryPerf.h"
+
+#include "core/Application.h"
 
 namespace RESANA {
 
-    MemoryPerf *MemoryPerf::sInstance = nullptr;
+	MemoryPerf::MemoryPerf()
+	{
+		mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
+		Start();
+	}
 
-    MemoryPerf::MemoryPerf() {
-        mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
-    }
+	MemoryPerf::~MemoryPerf()
+	{
+		RS_CORE_TRACE("MemoryPerf::~MemoryPerf()");
+	}
 
-    MemoryPerf::~MemoryPerf() {
-        mInfoThread = nullptr;
-        mPMCThread = nullptr;
-        sInstance = nullptr;
-        delete mInfoThread;
-        delete mPMCThread;
-        delete sInstance;
-    }
+	void MemoryPerf::Start()
+	{
+		if (!mRunning)
+		{
+			mThreads.emplace_back(std::thread([&] { UpdateMemoryInfo(); }));
+			mThreads.back().detach();
+			mThreads.emplace_back(std::thread([&] { UpdatePMC(); }));
+			mThreads.back().detach();
+			mRunning = true;
+		}
+	}
 
-    void MemoryPerf::Init() {
-        if (!sInstance) {
-            sInstance = new MemoryPerf();
-            sInstance->Run();
-        }
-    }
+	void MemoryPerf::Stop()
+	{
+		if (mRunning)
+		{
+			for (auto& th : mThreads) {
+				if (th.joinable()) { th.join(); }
+			}
 
-    void MemoryPerf::Run() {
-        if (mRunning) { return; }
-        mRunning = true;
+			Clear(mThreads);
+			mRunning = false;
+		}
+	}
 
-        mInfoThread = new std::thread(&MemoryPerf::UpdateMemoryInfo, this);
-        mInfoThread->detach();
-        mPMCThread = new std::thread(&MemoryPerf::UpdatePMC, this);
-        mPMCThread->detach();
-    }
+	DWORDLONG MemoryPerf::GetTotalPhys() const
+	{
+		return mMemoryInfo.ullTotalPhys;
+	}
 
-    void MemoryPerf::Stop() {
-        mRunning = false;
-    }
+	DWORDLONG MemoryPerf::GetAvailPhys() const
+	{
+		return mMemoryInfo.ullAvailPhys;
+	}
 
-    DWORDLONG MemoryPerf::GetTotalPhys() const {
-        return mMemoryInfo.ullTotalPhys;
-    }
+	DWORDLONG MemoryPerf::GetUsedPhys() const
+	{
+		return mMemoryInfo.ullTotalPhys - mMemoryInfo.ullAvailPhys;
+	}
 
-    DWORDLONG MemoryPerf::GetAvailPhys() const {
-        return mMemoryInfo.ullAvailPhys;
-    }
+	SIZE_T MemoryPerf::GetCurrProcUsagePhys() const
+	{
+		return mPMC.WorkingSetSize;
+	}
 
-    DWORDLONG MemoryPerf::GetUsedPhys() const {
-        return mMemoryInfo.ullTotalPhys - mMemoryInfo.ullAvailPhys;
-    }
+	DWORDLONG MemoryPerf::GetTotalVirtual() const
+	{
+		return mMemoryInfo.ullTotalPageFile;
+	}
 
-    SIZE_T MemoryPerf::GetCurrProcUsagePhys() const {
-        return mPMC.WorkingSetSize;
-    }
+	DWORDLONG MemoryPerf::GetAvailVirtual() const
+	{
+		return mMemoryInfo.ullAvailVirtual;
+	}
 
-    DWORDLONG MemoryPerf::GetTotalVirtual() const {
-        return mMemoryInfo.ullTotalPageFile;
-    }
+	DWORDLONG MemoryPerf::GetUsedVirtual() const
+	{
+		return mMemoryInfo.ullTotalPageFile - mMemoryInfo.ullAvailPageFile;
+	}
 
-    DWORDLONG MemoryPerf::GetAvailVirtual() const {
-        return mMemoryInfo.ullAvailVirtual;
-    }
+	SIZE_T MemoryPerf::GetCurrProcUsageVirtual() const
+	{
+		return mPMC.PrivateUsage;
+	}
 
-    DWORDLONG MemoryPerf::GetUsedVirtual() const {
-        return mMemoryInfo.ullTotalPageFile - mMemoryInfo.ullAvailPageFile;
-    }
+	void MemoryPerf::UpdateMemoryInfo()
+	{
+		while (mRunning)
+		{
+			if (!Application::Get().IsMinimized()) {
+				GlobalMemoryStatusEx(&mMemoryInfo);
+			}
 
-    SIZE_T MemoryPerf::GetCurrProcUsageVirtual() const {
-        return mPMC.PrivateUsage;
-    }
+			Sleep(1000);
+		}
+	}
 
-    void MemoryPerf::UpdateMemoryInfo() {
-        while (mRunning) {
-            GlobalMemoryStatusEx(&mMemoryInfo);
-            Sleep(1000);
-        }
-    }
+	void MemoryPerf::UpdatePMC()
+	{
+		while (mRunning)
+		{
+			if (!Application::Get().IsMinimized())
+			{
+				GetProcessMemoryInfo(GetCurrentProcess(),
+					(PROCESS_MEMORY_COUNTERS*)&mPMC, sizeof(mPMC));
+			}
 
-    void MemoryPerf::UpdatePMC() {
-        while (mRunning) {
-            GetProcessMemoryInfo(GetCurrentProcess(),
-                                 (PROCESS_MEMORY_COUNTERS *) &mPMC,
-                                 sizeof(mPMC));
-            Sleep(1000);
-        }
-    }
+			Sleep(1000);
+		}
+	}
 
 }

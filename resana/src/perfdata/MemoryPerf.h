@@ -4,48 +4,49 @@
 #include <Psapi.h>
 
 #include "PerfManager.h"
+#include <vector>
+#include <thread>
 
-namespace RESANA {
+namespace RESANA
+{
 
-#define BYTES_PER_MB 1048576;
+constexpr auto BYTES_PER_MB = 1048576;;
 
-    class MemoryPerf {
-    public:
-    public:
-        static void Init();
+	class MemoryPerf
+	{
+	public:
+		MemoryPerf();
+		~MemoryPerf();
 
-        void Run();
-        void Stop();
+		void Start();
+		void Stop();
 
-        /* Physical Memory */
-        [[nodiscard]]DWORDLONG GetTotalPhys() const;
-        [[nodiscard]]DWORDLONG GetAvailPhys() const;
-        [[nodiscard]]DWORDLONG GetUsedPhys() const;
-        [[nodiscard]]SIZE_T GetCurrProcUsagePhys() const;
+		/* Physical Memory */
+		[[nodiscard]] DWORDLONG GetTotalPhys() const;
+		[[nodiscard]] DWORDLONG GetAvailPhys() const;
+		[[nodiscard]] DWORDLONG GetUsedPhys() const;
+		[[nodiscard]] SIZE_T GetCurrProcUsagePhys() const;
 
-        /* Virtual Memory */
-        [[nodiscard]]DWORDLONG GetTotalVirtual() const;
-        [[nodiscard]]DWORDLONG GetAvailVirtual() const;
-        [[nodiscard]]DWORDLONG GetUsedVirtual() const;
-        [[nodiscard]]SIZE_T GetCurrProcUsageVirtual() const;
+		/* Virtual Memory */
+		[[nodiscard]] DWORDLONG GetTotalVirtual() const;
+		[[nodiscard]] DWORDLONG GetAvailVirtual() const;
+		[[nodiscard]] DWORDLONG GetUsedVirtual() const;
+		[[nodiscard]] SIZE_T GetCurrProcUsageVirtual() const;
 
-    private:
-        MemoryPerf();
-        ~MemoryPerf();
-        void UpdateMemoryInfo();
-        void UpdatePMC();
+		[[nodiscard]] bool IsRunning() const { return mRunning; }
 
-    private:
-        MEMORYSTATUSEX mMemoryInfo{};
-        PROCESS_MEMORY_COUNTERS_EX mPMC{};
-        bool mRunning = false;
+	private:
+		void UpdateMemoryInfo();
+		void UpdatePMC();
 
-        std::thread *mInfoThread = nullptr;
-        std::thread *mPMCThread = nullptr;
+	private:
+		MEMORYSTATUSEX mMemoryInfo{};
+		PROCESS_MEMORY_COUNTERS_EX mPMC{};
+		bool mRunning = false;
 
-        static MemoryPerf *sInstance;
+		std::vector<std::thread> mThreads{};
 
-        friend class PerfManager;
-    };
+		friend class PerfManager;
+	};
 
 } // RESANA
