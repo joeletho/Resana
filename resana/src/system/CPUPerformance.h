@@ -1,14 +1,12 @@
 #pragma once
 
-#include "core/Core.h"
-
 #include "ConcurrentProcess.h"
 
 #include <queue>
 #include <deque>
 #include <vector>
 
-#include <TCHAR.h>
+#include "TCHAR.h"
 #include <Pdh.h>
 
 namespace RESANA {
@@ -32,22 +30,22 @@ namespace RESANA {
 		DWORD Size = 0;
 		DWORD Buffer = 0;
 
-		ProcessorData() {}
-		ProcessorData(ProcessorData* data)
+		ProcessorData() = default;
+		ProcessorData(const ProcessorData* data)
 			: Processors(data->Processors), ArrayRef(data->ArrayRef), Size(data->Size), Buffer(data->Buffer) {}
 
 		~ProcessorData() {
 			for (auto p : Processors) { if (p) free(p); }
 		}
 
-		void Destory() {
+		void Destroy() {
 			this->~ProcessorData();
 		}
 
 		ProcessorData* operator=(const ProcessorData* rhs) {
-			this->Destory();
+			this->Destroy();
 			*this = new ProcessorData();
-			for (auto p : rhs->Processors) {
+			for (const auto p : rhs->Processors) {
 				Processors.push_back(new PdhCounterValueItem(*p));
 			}
 			ArrayRef = rhs->ArrayRef;
@@ -78,9 +76,9 @@ namespace RESANA {
 
 	private:
 		CPUPerformance();
-		virtual ~CPUPerformance();
+		virtual ~CPUPerformance() override;
 
-		// Initializers
+		// Initializer
 		void InitCPUData();
 		void InitProcessData();
 
@@ -93,7 +91,7 @@ namespace RESANA {
 		void CalcProcessLoadThread();
 
 		// Called from threads
-		ProcessorData* PrepareData();
+		[[nodiscard]] ProcessorData* PrepareData() const;
 		ProcessorData* ExtractData();
 		void CalcProcessLoad();
 		void SetData(ProcessorData* data);
@@ -102,9 +100,6 @@ namespace RESANA {
 
 		// Helpers
 		static std::vector<PdhCounterValueItem*>& SortAscending(std::vector<PdhCounterValueItem*>& vec);
-
-		template<typename T>
-		T CalculateAverage(std::deque<T>& values);
 
 	private:
 		const unsigned int MAX_LOAD_COUNT = 3;
@@ -117,11 +112,9 @@ namespace RESANA {
 		std::deque<double> mCPULoadValues{};
 		std::vector<std::thread> mThreads{};
 
-		bool mDataPrepared = false;
-
 		double mCPULoadAvg{};
 		double mProcessLoad{};
-		double mNumProcessors{};
+		int mNumProcessors{};
 
 		PDHCounter mCPUCounter{};
 		PDHCounter mLoadCounter{};

@@ -4,6 +4,8 @@
 #include "core/Core.h"
 #include "core/Application.h"
 
+#include "helpers/Container.h"
+
 #include <Windows.h>
 #include <PdhMsg.h>
 
@@ -23,23 +25,23 @@ namespace RESANA {
 		Sleep(1000); // Let detached threads finish before destructing
 
 		std::mutex mutex;
-		std::unique_lock<std::mutex> lock(mutex);
+		std::unique_lock<std::mutex>lock(mutex);
 
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
-		auto& readLock = lc.GetReadLock();
+		const auto& readLock = lc.GetReadLock();
 
 		while (writeLock.owns_lock()) { lc.Wait(lock); }
 
 		writeLock.lock();
 		lc.Wait(writeLock, !readLock.owns_lock());
 
-		mProcessorData->Destory();
+		mProcessorData->Destroy();
 
 		while (!mDataQueue.empty()) {
-			auto p = mDataQueue.front();
+			const auto p = mDataQueue.front();
 			mDataQueue.pop();
-			p->Destory();
+			p->Destroy();
 		}
 
 		sInstance = nullptr;
@@ -47,13 +49,11 @@ namespace RESANA {
 
 	void CPUPerformance::InitCPUData()
 	{
-		PDH_STATUS pdhStatus = ERROR_SUCCESS;
 		SYSTEM_INFO sysInfo;
-
 		GetSystemInfo(&sysInfo);
 		mNumProcessors = sysInfo.dwNumberOfProcessors;
 
-		pdhStatus = PdhOpenQuery(nullptr, 0, &mCPUCounter.Query);
+		PDH_STATUS pdhStatus = PdhOpenQuery(nullptr, 0, &mCPUCounter.Query);
 		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhOpenQuery failed with 0x{0}", pdhStatus);
 		}
@@ -116,7 +116,7 @@ namespace RESANA {
 
 	CPUPerformance* CPUPerformance::Get()
 	{
-		if (!sInstance) 
+		if (!sInstance)
 		{
 			sInstance = new CPUPerformance();
 			sInstance->InitCPUData();
@@ -134,7 +134,7 @@ namespace RESANA {
 
 		auto& lc = GetLockContainer();
 		auto& readLock = lc.GetReadLock();
-		auto& writeLock = lc.GetWriteLock();
+		const auto& writeLock = lc.GetWriteLock();
 
 		readLock.lock();
 		lc.Wait(readLock, !writeLock.owns_lock()); // Don't read the data when it's being set!
@@ -156,7 +156,7 @@ namespace RESANA {
 	double CPUPerformance::GetCurrentLoad()
 	{
 		PDH_STATUS pdhStatus = ERROR_SUCCESS;
-		PDH_FMT_COUNTERVALUE countervalue;
+		PDH_FMT_COUNTERVALUE counterValue;
 
 		pdhStatus = PdhOpenQuery(nullptr, 0, &mLoadCounter.Query);
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -181,7 +181,7 @@ namespace RESANA {
 		if (pdhStatus == ERROR_SUCCESS)
 		{
 			pdhStatus = PdhGetFormattedCounterValue(mLoadCounter.Counter,
-				PDH_FMT_DOUBLE | PDH_FMT_NOCAP100, nullptr, &countervalue);
+				PDH_FMT_DOUBLE | PDH_FMT_NOCAP100, nullptr, &counterValue);
 
 			if (pdhStatus == PDH_CALC_NEGATIVE_DENOMINATOR) {
 				RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
@@ -191,7 +191,7 @@ namespace RESANA {
 			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 		}
 
-		return countervalue.doubleValue > 0.0 ? countervalue.doubleValue : 0.0;
+		return counterValue.doubleValue > 0.0 ? counterValue.doubleValue : 0.0;
 	}
 
 	double CPUPerformance::GetCurrentProcessLoad() const
@@ -210,16 +210,14 @@ namespace RESANA {
 
 	void CPUPerformance::PrepareDataThread()
 	{
-		while (mRunning) { auto data = PrepareData(); PushData(data); }
+		while (mRunning) { const auto data = PrepareData(); PushData(data); }
 	}
 
 	void CPUPerformance::ExtractDataThread()
 	{
 		while (mRunning)
 		{
-			auto data = ExtractData();
-
-			if (data)
+			if (const auto data = ExtractData())
 			{
 				ProcessData(data);
 				SortAscending(data->Processors);
@@ -228,15 +226,14 @@ namespace RESANA {
 		}
 	}
 
-	ProcessorData* CPUPerformance::PrepareData()
+	ProcessorData* CPUPerformance::PrepareData() const
 	{
-		PDH_STATUS pdhStatus = ERROR_SUCCESS;
 		auto data = new ProcessorData();
 		bool success = true;
 
 		// Some counters need two samples in order to format a value, so
 		// make this call to get the first value before entering the loop.
-		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
+		PDH_STATUS pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
 		if (pdhStatus != ERROR_SUCCESS) {
 			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 			success = false;
@@ -287,7 +284,7 @@ namespace RESANA {
 		if (!data) { return; }
 
 		std::mutex mutex;
-		std::unique_lock<std::mutex> lock(mutex);
+		std::unique_lock<std::mutex>lock(mutex);
 
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
@@ -304,7 +301,7 @@ namespace RESANA {
 	ProcessorData* CPUPerformance::ExtractData()
 	{
 		std::mutex mutex;
-		std::unique_lock<std::mutex> lock(mutex);
+		std::unique_lock<std::mutex>lock(mutex);
 
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
@@ -314,7 +311,7 @@ namespace RESANA {
 		writeLock.lock();
 		while (mDataQueue.empty()) { lc.Wait(writeLock); }
 
-		auto data = mDataQueue.front();
+		const auto data = mDataQueue.front();
 		mDataQueue.pop();
 
 		writeLock.unlock();
@@ -325,7 +322,7 @@ namespace RESANA {
 
 	void CPUPerformance::ProcessData(ProcessorData* data)
 	{
-		if (data->ArrayRef == NULL) { return; }
+		if (data->ArrayRef == nullptr) { return; }
 
 		// Loop through the array and add _Total to deque and cpu values into the local vector
 		for (DWORD i = 0; i < data->Size; ++i)
@@ -333,7 +330,7 @@ namespace RESANA {
 			auto processor = new PdhCounterValueItem(data->ArrayRef[i]);
 			if (!processor) { continue; }
 
-			auto name = processor->szName;
+			const auto name = processor->szName;
 			auto value = processor->FmtValue.doubleValue;
 
 			if (std::strcmp(name, "_Total") == 0)
@@ -362,7 +359,6 @@ namespace RESANA {
 	{
 		FILETIME ftime, fsys, fuser;
 		ULARGE_INTEGER now, sys, user;
-		double percent;
 
 		GetSystemTimeAsFileTime(&ftime);
 		memcpy(&now, &ftime, sizeof(FILETIME));
@@ -370,7 +366,9 @@ namespace RESANA {
 		GetProcessTimes(mProcCounter.Handle, &ftime, &ftime, &fsys, &fuser);
 		memcpy(&sys, &fsys, sizeof(FILETIME));
 		memcpy(&user, &fuser, sizeof(FILETIME));
-		percent = (double)(sys.QuadPart - mProcCounter.LastSys.QuadPart) + (double)(user.QuadPart - mProcCounter.LastUser.QuadPart);
+
+		double percent = (double)(sys.QuadPart - mProcCounter.LastSys.QuadPart) +
+			(double)(user.QuadPart - mProcCounter.LastUser.QuadPart);
 		percent /= (double)(now.QuadPart - mProcCounter.Last.QuadPart);
 		percent /= GetNumProcessors();
 
@@ -385,11 +383,10 @@ namespace RESANA {
 		if (!data) { return; }
 
 		std::mutex mutex;
-		std::unique_lock<std::mutex> lock(mutex);
+		std::unique_lock<std::mutex>lock(mutex);
 
 		auto& lc = GetLockContainer();
 		auto& writeLock = lc.GetWriteLock();
-		auto& readLock = lc.GetReadLock();
 
 		while (writeLock.owns_lock()) { lc.Wait(lock); }
 		writeLock.lock();
@@ -397,7 +394,7 @@ namespace RESANA {
 		mDataReady = false;
 		lc.NotifyAll(); // Notify all that the state has changed
 
-		mProcessorData->Destory();
+		mProcessorData->Destroy();
 		mProcessorData.reset(data);
 		mDataReady = true;
 
@@ -407,20 +404,12 @@ namespace RESANA {
 
 	std::vector<PdhCounterValueItem*>& CPUPerformance::SortAscending(std::vector<PdhCounterValueItem*>& processors)
 	{
-		std::sort(processors.begin(), processors.end(), [&](PdhCounterValueItem* left, PdhCounterValueItem* right) {
-			return std::stoi(left->szName) < std::stoi(right->szName); 
+		std::sort(processors.begin(), processors.end(),
+			[&](const PdhCounterValueItem* left, const PdhCounterValueItem* right) {
+				return std::stoi(left->szName) < std::stoi(right->szName);
 			});
 
 		return processors;
-	}
-
-	template<typename T>
-	T CPUPerformance::CalculateAverage(std::deque<T>& values)
-	{
-		T sum = 0;
-		for (auto val : values) { sum += val; }
-
-		return sum / values.size();
 	}
 
 }
