@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/Core.h"
-
 #include "SafeLockContainer.h"
 
 namespace RESANA 
