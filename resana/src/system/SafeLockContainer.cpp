@@ -4,7 +4,7 @@ namespace RESANA
 {
 	SafeLockContainer::SafeLockContainer()
 	{
-		mReadLock = std::shared_lock<std::shared_mutex>(mMutex , std::defer_lock);
+		mReadLock = std::shared_lock<std::shared_mutex>(mMutex, std::defer_lock);
 		mWriteLock = std::unique_lock<std::shared_mutex>(mMutex, std::defer_lock);
 	}
 

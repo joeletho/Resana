@@ -19,11 +19,11 @@ namespace RESANA
 		void NotifyOne();
 		void NotifyAll();
 
-		template <class _Lock>
-		void Wait(_Lock& lock);
+		template <class Lock>
+		void Wait(Lock& lock);
 
-		template <class _Lock>
-		void Wait(_Lock& lock, bool predicate);
+		template <class Lock>
+		void Wait(Lock& lock, bool predicate);
 
 	private:
 		std::shared_lock<std::shared_mutex> mReadLock;
@@ -33,14 +33,14 @@ namespace RESANA
 		std::condition_variable_any mCondVar{};
 	};
 
-	template <class _Lock>
-	inline void SafeLockContainer::Wait(_Lock& lock)
+	template <class Lock>
+	inline void SafeLockContainer::Wait(Lock& lock)
 	{
 		mCondVar.wait(lock);
 	}
 
-	template <class _Lock>
-	inline void SafeLockContainer::Wait(_Lock& lock, bool predicate)
+	template <class Lock>
+	inline void SafeLockContainer::Wait(Lock& lock, bool predicate)
 	{
 		mCondVar.wait(lock, [&predicate] { return predicate; });
 	}
