@@ -6,7 +6,7 @@
 
 namespace RESANA {
 
-	class ProcessPanel : public Panel
+	class ProcessPanel final : public Panel
 	{
 	public:
 		ProcessPanel();

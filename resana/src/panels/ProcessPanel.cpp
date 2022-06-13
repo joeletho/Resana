@@ -1,4 +1,3 @@
-#include "rspch.h"
 #include "ProcessPanel.h"
 
 #include <imgui.h>
@@ -33,9 +32,9 @@ namespace RESANA {
 			ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
 		{
 			mProcessManager = ProcessManager::Get();
-			if (auto data = mProcessManager->GetData()) // Mutex is locked
+			if (const auto data = mProcessManager->GetData()) // Mutex is locked
 			{
-				for (auto entry : data->Entries)
+				for (const auto entry : data->Entries)
 				{
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();

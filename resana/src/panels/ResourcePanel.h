@@ -6,7 +6,7 @@
 
 namespace RESANA
 {
-	class ResourcePanel : public Panel
+	class ResourcePanel final : public Panel
 	{
 	public:
 		ResourcePanel();
@@ -15,8 +15,8 @@ namespace RESANA
 		void ShowPanel(bool* pOpen) override;
 
 	private:
-		void ShowPhysicalMemoryTable();
-		void ShowVirtualMemoryTable();
+		void ShowPhysicalMemoryTable() const;
+		void ShowVirtualMemoryTable() const;
 		void ShowCPUTable();
 	private:
 		std::shared_ptr<MemoryPerf> mMemoryInfo;
