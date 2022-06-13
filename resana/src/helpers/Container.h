@@ -1,8 +1,7 @@
 #pragma once
 
 #include <vector>
-
-#include <TlHelp32.h>
+#include <deque>
 
 namespace RESANA {
 
@@ -50,8 +49,8 @@ namespace RESANA {
 	template<typename T>
 	void CopyProtected(std::vector<T>& lhs, const std::vector<T>& rhs, std::mutex& lhs_mtx, std::mutex& rhs_mtx, bool del_lhs)
 	{
-		static std::mutex funcMutex;
 		{
+			static std::mutex funcMutex;
 			std::lock_guard<std::mutex> lock(funcMutex);
 			{
 				std::lock<std::mutex>(lhs_mtx, rhs_mtx);
@@ -62,6 +61,15 @@ namespace RESANA {
 				Copy(lhs, rhs);
 			}
 		}
+	}
+
+	template<class C, typename T = typename C::value_type>
+	T CalculateAverage(C& values)
+	{
+		T sum = 0;
+		for (const auto val : values) { sum += val; }
+
+		return sum / values.size();
 	}
 
 } // RESANA
