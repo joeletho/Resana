@@ -5,33 +5,38 @@
 #include "imgui/ImGuiLayer.h"
 #include "LayerStack.h"
 
+#include <memory>
+
 namespace RESANA {
 
-    class Application {
-    public:
-        Application();
-        ~Application();
+	class Application {
+	public:
+		Application();
+		virtual ~Application();
 
-        void PushLayer(Layer *layer);
-        void Run();
-        void Terminate();
-        bool IsMinimized() const;
+		void PushLayer(Layer* layer);
+		void Run();
 
-        inline Window &GetWindow() { return *mWindow; }
+		void Terminate();
+		bool IsMinimized() const;
 
-        inline static Application &Get() { return *sInstance; }
+		[[nodiscard]] Window& GetWindow() const { return *mWindow; }
 
-    private:
-        std::shared_ptr<Window> mWindow;
-        ImGuiLayer *mImGuiLayer;
-        LayerStack mLayerStack;
-        bool mRunning = true;
-        bool mMinimized = false;
+		static Application& Get() { return *sInstance; }
 
-        float mLastFrameTime = 0.0f;
+	private:
+		std::shared_ptr<Window> mWindow;
+		ImGuiLayer* mImGuiLayer;
+		LayerStack mLayerStack;
+		bool mRunning = true;
+		bool mMinimized = false;
 
-        static Application *sInstance;
-    };
+		static Application* sInstance;
+	};
+
+	// To be defined by CLIENT
+	Application* CreateApplication();
 
 } // RESANA
+
 

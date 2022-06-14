@@ -76,19 +76,3 @@ namespace RESANA {
 	}
 
 } // RESANA
-
-
-
-// -----------------------------------------------------------------
-// [[ENTRY POINT]]
-// -----------------------------------------------------------------
-int main(int argc, char** argv)
-{
-	RESANA::Log::Init();
-
-	RS_CORE_WARN("Application initialized!");
-
-	auto* app = new RESANA::Application;
-	app->Run();
-	delete app;
-}
