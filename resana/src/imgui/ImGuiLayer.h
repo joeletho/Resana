@@ -2,12 +2,9 @@
 
 #include "core/Layer.h"
 
-#include "panels/ResourcePanel.h"
-#include "panels/ProcessPanel.h"
-
 namespace RESANA
 {
-	class ImGuiLayer : public Layer
+	class ImGuiLayer final : public Layer
 	{
 	public:
 		ImGuiLayer();
@@ -23,11 +20,7 @@ namespace RESANA
 	private:
 		static void ShowImGuiDockspace();
 
-	private:
 		float mTime = 0.0f;
-
-		ResourcePanel* mResourcePanel = nullptr;
-		ProcessPanel* mProcessPanel = nullptr;
 	};
 
 } // RESANA

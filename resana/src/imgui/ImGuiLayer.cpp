@@ -43,9 +43,6 @@ namespace RESANA
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 460 core");
-
-		mResourcePanel = new ResourcePanel();
-		mProcessPanel = new ProcessPanel();
 	}
 
 	void ImGuiLayer::OnDetach()
@@ -83,14 +80,14 @@ namespace RESANA
 
 	void ImGuiLayer::ShowImGuiDockspace()
 	{
-		static bool opt_fullscreen = true;
-		static bool opt_padding = false;
+		static bool optFullscreen = true;
+		static bool optPadding = false;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (opt_fullscreen)
+		if (optFullscreen)
 		{
 			const ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -117,24 +114,24 @@ namespace RESANA
 		// all active windows docked into it will lose their parent and become undocked.
 		// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
 		// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
-		if (!opt_padding) {
+		if (!optPadding) {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		}
 		ImGui::Begin("DockSpace Demo", nullptr, window_flags);
-		if (!opt_padding) {
+		if (!optPadding) {
 			ImGui::PopStyleVar();
 		}
 
-		if (opt_fullscreen) {
+		if (optFullscreen) {
 			ImGui::PopStyleVar(2);
 		}
 
 		// Submit the DockSpace
-		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
-			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+			const ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
+			ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
 		ImGui::End();
@@ -143,37 +140,6 @@ namespace RESANA
 	void ImGuiLayer::OnImGuiRender()
 	{
 		ShowImGuiDockspace();
-
-		static bool showDemo = false;
-		static bool showResourcePanel = false;
-		static bool showProcessPanel = false;
-
-		if (ImGui::BeginMainMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Quit")) {
-					Application::Get().Terminate();
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("View"))
-			{
-				ImGui::MenuItem("Resource Manager", nullptr, &showResourcePanel);
-				ImGui::MenuItem("Process", nullptr, &showProcessPanel);
-				ImGui::MenuItem("ImGui Demo", nullptr, &showDemo);
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
-		}
-
-		if (showDemo) {
-			ImGui::ShowDemoWindow(&showDemo);
-		}
-
-		mResourcePanel->ShowPanel(&showResourcePanel);
-		mProcessPanel->ShowPanel(&showProcessPanel);
 	}
 
 } // RESANA
