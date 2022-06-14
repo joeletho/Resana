@@ -17,6 +17,10 @@ namespace RESANA
 	ResourcePanel::~ResourcePanel()
 	{
 		RS_CORE_TRACE("ResourcePanel::~ResourcePanel()");
+
+		mMemoryInfo->Stop();
+		mCPUInfo->Stop();
+
 	}
 
 	void ResourcePanel::ShowPanel(bool* pOpen)
