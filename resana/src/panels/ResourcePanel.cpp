@@ -19,7 +19,7 @@ namespace RESANA
 		RS_CORE_TRACE("ResourcePanel::~ResourcePanel()");
 
 		mMemoryInfo->Stop();
-		mCPUInfo->Stop();
+		CPUPerformance::Stop();
 
 	}
 
@@ -70,7 +70,7 @@ namespace RESANA
 		ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
 		ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
 		ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
-		ImGui::Text("%llu MB", procMem);
+		ImGui::Text("%lu MB", procMem);
 		ImGui::EndTable();
 	}
 
@@ -88,16 +88,16 @@ namespace RESANA
 		ImGui::Text("Used by process");
 		ImGui::TableNextColumn();
 
-		const auto total_mem = mMemoryInfo->GetTotalVirtual() / BYTES_PER_MB;
-		const auto used_mem = mMemoryInfo->GetUsedVirtual() / BYTES_PER_MB;
-		const float used_percent = (float)used_mem / (float)total_mem * 100.0f;
-		const auto avail_mem = mMemoryInfo->GetAvailVirtual() / BYTES_PER_MB;
-		const auto proc_mem = mMemoryInfo->GetCurrProcUsageVirtual() / BYTES_PER_MB;
+		const auto totalMem = mMemoryInfo->GetTotalVirtual() / BYTES_PER_MB;
+		const auto usedMem = mMemoryInfo->GetUsedVirtual() / BYTES_PER_MB;
+		const float usedPercent = (float)usedMem / (float)totalMem * 100.0f;
+		const auto availMem = mMemoryInfo->GetAvailVirtual() / BYTES_PER_MB;
+		const auto procMem = mMemoryInfo->GetCurrProcUsageVirtual() / BYTES_PER_MB;
 
-		ImGui::Text("%llu.%llu GB", total_mem / 1000, total_mem % 10);
-		ImGui::Text("%llu.%llu GB (%.1f%%)", used_mem / 1000, used_mem % 10, used_percent);
-		ImGui::Text("%llu.%llu GB", avail_mem / 1000, avail_mem % 10);
-		ImGui::Text("%lu MB", proc_mem);
+		ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
+		ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
+		ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
+		ImGui::Text("%lu MB", procMem);
 		ImGui::EndTable();
 	}
 
@@ -110,9 +110,11 @@ namespace RESANA
 		ImGui::TableNextColumn();
 
 		mCPUInfo = CPUPerformance::Get();
-		if (const auto data = mCPUInfo->GetData()) // Mutex is locked
+		if (const auto &data = mCPUInfo->GetData())
 		{
-			for (const auto p : data->Processors) {
+			std::scoped_lock slock(data->GetMutex());
+
+			for (const auto& p : data->Processors) {
 				ImGui::Text("cpu %s", p->szName);
 			}
 
@@ -121,7 +123,7 @@ namespace RESANA
 			ImGui::TableNextColumn();
 
 			// Display values for all logical processors
-			for (const auto p : data->Processors) {
+			for (const auto& p : data->Processors) {
 				ImGui::Text("%.1f%%", p->FmtValue.doubleValue);
 			}
 
@@ -131,7 +133,7 @@ namespace RESANA
 			ImGui::Text("%.1f%%", currLoad);
 			ImGui::Text("%.1f%%", procLoad);
 
-			mCPUInfo->ReleaseData(); // Must unlock mutex!
+			mCPUInfo->ReleaseData();
 		}
 
 		ImGui::EndTable();
