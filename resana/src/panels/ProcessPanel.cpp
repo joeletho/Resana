@@ -1,6 +1,9 @@
 #include "ProcessPanel.h"
 
+#include "imgui/ImGuiHelpers.h"
 #include <imgui.h>
+
+#include <mutex>
 
 namespace RESANA {
 
@@ -32,20 +35,37 @@ namespace RESANA {
 			ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
 		{
 			mProcessManager = ProcessManager::Get();
-			if (const auto data = mProcessManager->GetData()) // Mutex is locked
+			if (const auto& data = mProcessManager->GetData()) // Notify data is in use
 			{
-				for (const auto entry : data->Entries)
+				// Lock the data and read the entries
+				std::scoped_lock slock(data->GetMutex());
+
+				for (const auto& entry : data->GetEntries())
 				{
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();
-					ImGui::Selectable(entry->Process.szExeFile, &entry->flag, ImGuiSelectableFlags_SpanAllColumns);
-					ImGui::TableNextColumn();
-					ImGui::Text("%lu", entry->Process.th32ProcessID);
-					ImGui::TableNextColumn();
-					ImGui::Text("%lu", entry->Process.cntThreads);
+
+					{
+						// Lock the entry
+						std::scoped_lock slock(entry->Mutex());
+
+						static char uniqueId[64];
+						sprintf_s(uniqueId, "##%lu", entry->ProcessId());
+
+						if (ImGui::Selectable(entry->Name().c_str(), entry->IsSelected(),
+							ImGuiSelectableFlags_SpanAllColumns, ImGui::GetColumnWidth(1), uniqueId))
+						{
+							data->SelectEntry(entry);
+						}
+
+						ImGui::TableNextColumn();
+						ImGui::Text("%lu", entry->ProcessId());
+						ImGui::TableNextColumn();
+						ImGui::Text("%lu", entry->ThreadCount());
+					}
 				}
 
-				mProcessManager->ReleaseData(); // Must unlock mutex!
+				mProcessManager->ReleaseData(); // Notify data is no longer needed
 			}
 
 			ImGui::EndTable();
