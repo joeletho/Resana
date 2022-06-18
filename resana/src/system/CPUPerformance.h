@@ -6,7 +6,7 @@
 #include <deque>
 #include <vector>
 
-#include "TCHAR.h"
+#include <TCHAR.h>
 #include <Pdh.h>
 
 namespace RESANA {
@@ -25,34 +25,43 @@ namespace RESANA {
 
 	struct ProcessorData
 	{
-		std::vector<PdhCounterValueItem*> Processors{};
+		std::vector<std::shared_ptr<PdhCounterValueItem>> Processors{};
 		PdhCounterValueItem* ArrayRef = nullptr;
 		DWORD Size = 0;
 		DWORD Buffer = 0;
+		std::mutex Mutex{};
 
 		ProcessorData() = default;
-		ProcessorData(const ProcessorData* data)
+
+		explicit ProcessorData(const ProcessorData* data)
 			: Processors(data->Processors), ArrayRef(data->ArrayRef), Size(data->Size), Buffer(data->Buffer) {}
 
 		~ProcessorData() {
-			for (auto p : Processors) { if (p) free(p); }
+			std::scoped_lock lock(Mutex);
 		}
 
-		void Destroy() {
-			this->~ProcessorData();
+		std::mutex& GetMutex()
+		{
+			return Mutex;
 		}
 
-		ProcessorData* operator=(const ProcessorData* rhs) {
-			this->Destroy();
-			*this = new ProcessorData();
-			for (const auto p : rhs->Processors) {
-				Processors.push_back(new PdhCounterValueItem(*p));
+		void Clear()
+		{
+			std::scoped_lock lock(Mutex);
+			Processors.clear();
+		}
+
+		ProcessorData& operator=(const ProcessorData* rhs) {
+			this->Clear();
+			std::scoped_lock lock(Mutex);
+			for (const auto& p : rhs->Processors) {
+				Processors.push_back(std::make_shared<PdhCounterValueItem>(*p));
 			}
-			ArrayRef = rhs->ArrayRef;
-			Size = rhs->Size;
-			Buffer = rhs->Buffer;
+			this->ArrayRef = rhs->ArrayRef;
+			this->Size = rhs->Size;
+			this->Buffer = rhs->Buffer;
 
-			return this;
+			return *this;
 		}
 	};
 
@@ -66,17 +75,17 @@ namespace RESANA {
 
 		std::shared_ptr<ProcessorData> GetData();
 
-		int GetNumProcessors() const;
-		double GetAverageLoad() const;
-		double GetCurrentLoad();
-		double GetCurrentProcessLoad() const;
+		[[nodiscard]] int GetNumProcessors() const;
+		[[nodiscard]] double GetAverageLoad() const;
+		[[nodiscard]] double GetCurrentLoad();
+		[[nodiscard]] double GetCurrentProcessLoad() const;
 
 		// Must be called after GetData() to unlock mutex
 		void ReleaseData();
 
 	private:
 		CPUPerformance();
-		virtual ~CPUPerformance() override;
+		~CPUPerformance() override;
 
 		// Initializer
 		void InitCPUData();
@@ -87,7 +96,7 @@ namespace RESANA {
 
 		// Threads
 		void PrepareDataThread();
-		void ExtractDataThread();
+		void ProcessDataThread();
 		void CalcProcessLoadThread();
 
 		// Called from threads
@@ -99,18 +108,18 @@ namespace RESANA {
 		void ProcessData(ProcessorData* data);
 
 		// Helpers
-		static std::vector<PdhCounterValueItem*>& SortAscending(std::vector<PdhCounterValueItem*>& vec);
+		static ProcessorData* SortAscending(ProcessorData* data);
 
 	private:
 		const unsigned int MAX_LOAD_COUNT = 3;
 
 		bool mRunning = false;
-		bool mDataReady = false;
+		std::atomic<bool> mDataReady = false;
+		std::atomic<bool> mDataBusy = false;
 
 		std::shared_ptr<ProcessorData> mProcessorData{};
 		std::queue<ProcessorData*> mDataQueue{};
 		std::deque<double> mCPULoadValues{};
-		std::vector<std::thread> mThreads{};
 
 		double mCPULoadAvg{};
 		double mProcessLoad{};
