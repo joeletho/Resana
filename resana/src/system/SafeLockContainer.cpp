@@ -4,15 +4,20 @@ namespace RESANA
 {
 	SafeLockContainer::SafeLockContainer()
 	{
-		mReadLock = std::shared_lock<std::shared_mutex>(mMutex, std::defer_lock);
-		mWriteLock = std::unique_lock<std::shared_mutex>(mMutex, std::defer_lock);
+		mReadLock = std::shared_lock<std::shared_mutex>(mSmutex, std::defer_lock);
+		mWriteLock = std::unique_lock<std::recursive_mutex>(mRmutex, std::defer_lock);
 	}
 
-	SafeLockContainer::~SafeLockContainer() {};
+	SafeLockContainer::~SafeLockContainer() = default;
 
-	std::shared_mutex& SafeLockContainer::GetMutex()
+	std::shared_mutex& SafeLockContainer::GetSharedMutex()
 	{
-		return mMutex;
+		return mSmutex;
+	}
+
+	std::recursive_mutex& SafeLockContainer::GetMutex()
+	{
+		return mRmutex;
 	}
 
 	std::shared_lock<std::shared_mutex>& SafeLockContainer::GetReadLock()
@@ -20,7 +25,7 @@ namespace RESANA
 		return mReadLock;
 	}
 
-	std::unique_lock<std::shared_mutex>& SafeLockContainer::GetWriteLock()
+	std::unique_lock<std::recursive_mutex>& SafeLockContainer::GetWriteLock()
 	{
 		return mWriteLock;
 	}
