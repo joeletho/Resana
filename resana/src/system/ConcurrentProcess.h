@@ -2,14 +2,16 @@
 
 #include "SafeLockContainer.h"
 
-namespace RESANA 
+namespace RESANA
 {
 
 	class ConcurrentProcess
 	{
 	public:
-		ConcurrentProcess(std::string name);
-		virtual ~ConcurrentProcess() {};
+		explicit ConcurrentProcess(std::string name);
+		virtual ~ConcurrentProcess() = default;
+
+		std::recursive_mutex& GetMutex() { return mLockContainer.GetMutex(); }
 
 	protected:
 
