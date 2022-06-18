@@ -12,9 +12,11 @@ namespace RESANA
 		SafeLockContainer();
 		~SafeLockContainer();
 
-		std::shared_mutex& GetMutex();
+		std::recursive_mutex& GetMutex();
+		std::shared_mutex& GetSharedMutex();
 		std::shared_lock<std::shared_mutex>& GetReadLock();
-		std::unique_lock<std::shared_mutex>& GetWriteLock();
+		std::unique_lock<std::recursive_mutex>& GetWriteLock();
+
 
 		void NotifyOne();
 		void NotifyAll();
@@ -25,24 +27,44 @@ namespace RESANA
 		template <class Lock>
 		void Wait(Lock& lock, bool predicate);
 
-	private:
-		std::shared_lock<std::shared_mutex> mReadLock;
-		std::unique_lock<std::shared_mutex> mWriteLock;
+		template <class Lock>
+		void WaitFor(Lock& lock, std::chrono::milliseconds waitTime);
 
-		std::shared_mutex mMutex{};
+		template <class Lock>
+		void WaitFor(Lock& lock, std::chrono::milliseconds waitTime, bool predicate);
+
+
+	private:
+		std::unique_lock<std::recursive_mutex> mWriteLock;
+		std::shared_lock<std::shared_mutex> mReadLock;
+
+		std::shared_mutex mSmutex{};
+		std::recursive_mutex mRmutex{};
 		std::condition_variable_any mCondVar{};
 	};
 
 	template <class Lock>
-	inline void SafeLockContainer::Wait(Lock& lock)
+	void SafeLockContainer::Wait(Lock& lock)
 	{
 		mCondVar.wait(lock);
 	}
 
 	template <class Lock>
-	inline void SafeLockContainer::Wait(Lock& lock, bool predicate)
+	void SafeLockContainer::Wait(Lock& lock, bool predicate)
 	{
 		mCondVar.wait(lock, [&predicate] { return predicate; });
+	}
+
+	template <class Lock>
+	void SafeLockContainer::WaitFor(Lock& lock, std::chrono::milliseconds waitTime, bool predicate)
+	{
+		mCondVar.wait_for(lock, waitTime, [&predicate] { return predicate; });
+	}
+
+	template <class Lock>
+	void SafeLockContainer::WaitFor(Lock& lock, std::chrono::milliseconds waitTime)
+	{
+		mCondVar.wait_for(lock, waitTime);
 	}
 
 }
