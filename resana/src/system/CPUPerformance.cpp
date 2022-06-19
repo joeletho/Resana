@@ -6,11 +6,11 @@
 
 #include "helpers/Container.h"
 
+#include <mutex>
+
 #include <PdhMsg.h>
 #include <Windows.h>
 #include <synchapi.h>
-
-#include <mutex>
 
 namespace RESANA {
 
@@ -222,6 +222,7 @@ namespace RESANA {
 	{
 		auto data = new ProcessorData();
 		bool success = true;
+		PdhItem* processorRef = nullptr;
 
 		// Some counters need two samples in order to format a value, so
 		// make this call to get the first value before entering the loop.
@@ -242,31 +243,35 @@ namespace RESANA {
 
 		// Get the required size of the data buffer.
 		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
-			&data->Buffer, &data->Size, data->ArrayRef);
+			&data->GetBuffer(), &data->GetSize(), processorRef);
 
 		if (pdhStatus != PDH_MORE_DATA) {
 			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
 			success = false;
 		}
 
-		data->ArrayRef = (PdhCounterValueItem*)malloc(data->Buffer);
-		if (!data->ArrayRef) {
+		processorRef = (PdhItem*)malloc(data->GetBuffer());
+		if (!processorRef) {
 			RS_CORE_ERROR("malloc for PdhGetFormattedCounterArray failed 0x{0}", pdhStatus);
 			success = false;
 		}
 
 		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
-			&data->Buffer, &data->Size, data->ArrayRef);
+			&data->GetBuffer(), &data->GetSize(), processorRef);
 
 		if (pdhStatus != ERROR_SUCCESS) {
-			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
+		RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
 			success = false;
 		}
 
-		// In case of an error, free the memory
-		if (!success) {
-			delete data;
+		if (success) {
+			data->SetProcessorRef(processorRef);
+		}
+		else
+		{
+			// In case of an error, free the memory
 			data = nullptr;
+			delete data;
 		}
 
 		return data;
@@ -304,12 +309,14 @@ namespace RESANA {
 
 	void CPUPerformance::ProcessData(ProcessorData* data)
 	{
-		if (!data || data->ArrayRef == nullptr) { return; }
+		if (!data || data->GetProcessorRef() == nullptr) { return; }
+
+		const auto processorPtr = data->GetProcessorRef();
 
 		// Loop through the array and add _Total to deque and cpu values into the local vector
-		for (DWORD i = 0; i < data->Size; ++i)
+		for (DWORD i = 0; i < data->GetSize(); ++i)
 		{
-			const auto processor = new PdhCounterValueItem(data->ArrayRef[i]);
+			const auto processor = new PdhItem(processorPtr[i]);
 			if (!processor) { continue; }
 
 			const auto name = processor->szName;
@@ -331,7 +338,7 @@ namespace RESANA {
 			}
 			else {
 				// Add the processor
-				data->Processors.push_back(std::make_shared<PdhCounterValueItem>(*processor));
+				data->GetProcessors().push_back(std::make_shared<PdhItem>(*processor));
 			}
 		}
 	}
@@ -389,9 +396,9 @@ namespace RESANA {
 
 	ProcessorData* CPUPerformance::SortAscending(ProcessorData* data)
 	{
-		auto& processors = data->Processors;
+		auto& processors = data->GetProcessors();
 		std::sort(processors.begin(), processors.end(),
-			[&](const std::shared_ptr<PdhCounterValueItem>& left, const std::shared_ptr<PdhCounterValueItem>& right) {
+			[&](const std::shared_ptr<PdhItem>& left, const std::shared_ptr<PdhItem>& right) {
 				return std::stoi(left->szName) < std::stoi(right->szName);
 			});
 
