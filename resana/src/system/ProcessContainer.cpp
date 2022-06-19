@@ -69,7 +69,7 @@ namespace RESANA
 		{
 			if (auto proc =
 				mEntries.at(reinterpret_cast<std::vector<ProcessEntry*>::size_type>(&it));
-				proc->ProcessId() == entry->ProcessId())
+				proc->GetProcessId() == entry->GetProcessId())
 			{
 				delete proc;
 				proc = nullptr;

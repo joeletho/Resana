@@ -39,14 +39,14 @@ namespace RESANA
 
 			explicit Process(const ProcessEntry* other)
 			{
-				Name.assign(other->Name());
-				ProcessId				= other->ProcessId();
-				ParentProcessId			= other->ParentProcessId();
-				ModuleId				= other->ModuleId();
-				MemoryUsage				= other->MemoryUsage();
-				ThreadCount				= other->ThreadCount();
-				PriorityClass			= other->PriorityClass();
-				Flags					= other->Flags();
+				Name.assign(other->GetName());
+				ProcessId				= other->GetProcessId();
+				ParentProcessId			= other->GetParentProcessId();
+				ModuleId				= other->GetModuleId();
+				MemoryUsage				= other->GetMemoryUsage();
+				ThreadCount				= other->GetThreadCount();
+				PriorityClass			= other->GetPriorityClass();
+				Flags					= other->GetFlags();
 			}
 		};
 
@@ -69,14 +69,14 @@ namespace RESANA
 			std::scoped_lock lock(mMutex);
 		}
 
-		[[nodiscard]] ulong MemoryUsage() const		{ return mProcess.MemoryUsage; }
-		[[nodiscard]] ulong ProcessId() const		{ return mProcess.ProcessId; }
-		[[nodiscard]] ulong ModuleId() const		{ return mProcess.ModuleId; }
-		[[nodiscard]] ulong ThreadCount() const		{ return mProcess.ThreadCount; }
-		[[nodiscard]] ulong ParentProcessId() const { return mProcess.ParentProcessId; }
-		[[nodiscard]] ulong Flags() const			{ return mProcess.Flags; }
-		[[nodiscard]] std::string Name() const		{ return mProcess.Name; }
-		[[nodiscard]] ulong PriorityClass() const	{ return mProcess.PriorityClass; }
+		[[nodiscard]] ulong GetMemoryUsage() const		{ return mProcess.MemoryUsage; }
+		[[nodiscard]] ulong GetProcessId() const		{ return mProcess.ProcessId; }
+		[[nodiscard]] ulong GetModuleId() const		{ return mProcess.ModuleId; }
+		[[nodiscard]] ulong GetThreadCount() const		{ return mProcess.ThreadCount; }
+		[[nodiscard]] ulong GetParentProcessId() const { return mProcess.ParentProcessId; }
+		[[nodiscard]] ulong GetFlags() const			{ return mProcess.Flags; }
+		[[nodiscard]] std::string GetName() const		{ return mProcess.Name; }
+		[[nodiscard]] ulong GetPriorityClass() const	{ return mProcess.PriorityClass; }
 
 		void Free() { this->~ProcessEntry(); }
 
@@ -84,16 +84,18 @@ namespace RESANA
 		bool& Running()								{ return mRunning; }
 		std::mutex& Mutex()							{ return mMutex; }
 
+
+		// Overloads
 		ProcessEntry& operator=(const ProcessEntry* entry)
 		{
-			mProcess.Name.assign(entry->Name());
-			mProcess.ProcessId			= entry->ProcessId();
-			mProcess.ParentProcessId	= entry->ParentProcessId();
-			mProcess.ModuleId			= entry->ModuleId();
-			mProcess.MemoryUsage		= entry->MemoryUsage();
-			mProcess.ThreadCount		= entry->ThreadCount();
-			mProcess.PriorityClass		= entry->PriorityClass();
-			mProcess.Flags				= entry->Flags();
+			mProcess.Name.assign(entry->GetName());
+			mProcess.ProcessId			= entry->GetProcessId();
+			mProcess.ParentProcessId	= entry->GetParentProcessId();
+			mProcess.ModuleId			= entry->GetModuleId();
+			mProcess.MemoryUsage		= entry->GetMemoryUsage();
+			mProcess.ThreadCount		= entry->GetThreadCount();
+			mProcess.PriorityClass		= entry->GetPriorityClass();
+			mProcess.Flags				= entry->GetFlags();
 			mSelected					= entry->IsSelected();
 			return *this;
 		}

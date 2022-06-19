@@ -21,7 +21,7 @@ namespace RESANA
 
 	void ProcessMap::Emplace(ProcessEntry* entry)
 	{
-		mMap.emplace(std::make_pair<>(entry->ProcessId(), entry));
+		mMap.emplace(std::make_pair<>(entry->GetProcessId(), entry));
 	}
 
 	void ProcessMap::Clear()
@@ -84,7 +84,7 @@ namespace RESANA
 	void ProcessMap::Erase(const ProcessEntry* entry)
 	{
 		if (!entry) { return; }
-		if (auto* proc = Find(entry->ProcessId()))
+		if (auto* proc = Find(entry->GetProcessId()))
 		{
 			if (proc != entry) // entry is a copy, delete both
 			{
@@ -92,7 +92,7 @@ namespace RESANA
 				entry = nullptr;
 			}
 
-			mMap.erase(proc->ProcessId());
+			mMap.erase(proc->GetProcessId());
 
 			delete proc;
 			proc = nullptr;
