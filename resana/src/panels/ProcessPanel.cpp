@@ -50,18 +50,18 @@ namespace RESANA {
 						std::scoped_lock slock(entry->Mutex());
 
 						static char uniqueId[64];
-						sprintf_s(uniqueId, "##%lu", entry->ProcessId());
+						sprintf_s(uniqueId, "##%lu", entry->GetProcessId());
 
-						if (ImGui::Selectable(entry->Name().c_str(), entry->IsSelected(),
+						if (ImGui::Selectable(entry->GetName().c_str(), entry->IsSelected(),
 							ImGuiSelectableFlags_SpanAllColumns, ImGui::GetColumnWidth(1), uniqueId))
 						{
 							data->SelectEntry(entry);
 						}
 
 						ImGui::TableNextColumn();
-						ImGui::Text("%lu", entry->ProcessId());
+						ImGui::Text("%lu", entry->GetProcessId());
 						ImGui::TableNextColumn();
-						ImGui::Text("%lu", entry->ThreadCount());
+						ImGui::Text("%lu", entry->GetThreadCount());
 					}
 				}
 

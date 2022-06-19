@@ -114,7 +114,7 @@ namespace RESANA
 		{
 			std::scoped_lock slock(data->GetMutex());
 
-			for (const auto& p : data->Processors) {
+			for (const auto& p : data->GetProcessors()) {
 				ImGui::Text("cpu %s", p->szName);
 			}
 
@@ -123,7 +123,7 @@ namespace RESANA
 			ImGui::TableNextColumn();
 
 			// Display values for all logical processors
-			for (const auto& p : data->Processors) {
+			for (const auto& p : data->GetProcessors()) {
 				ImGui::Text("%.1f%%", p->FmtValue.doubleValue);
 			}
 
