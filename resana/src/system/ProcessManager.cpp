@@ -76,16 +76,6 @@ namespace RESANA {
 		lc.NotifyAll();
 	}
 
-	void ProcessManager::ResetAllRunningStatus()
-	{
-		// Set all process running status to false
-		std::scoped_lock slock(mProcessMap.GetMutex());
-		for (const auto& [id, entry] : mProcessMap)
-		{
-			entry->Running() = false;
-		}
-	}
-
 	int ProcessManager::GetNumProcesses() const
 	{
 		return (mProcessContainer) ? mProcessContainer->GetNumEntries() : 0;
@@ -252,7 +242,7 @@ namespace RESANA {
 	{
 		if (!entry) { return false; }
 
-		if (const auto& proc = mProcessMap.Find(entry->ProcessId()))
+		if (const auto& proc = mProcessMap.Find(entry->GetProcessId()))
 		{
 			std::scoped_lock slock(proc->Mutex());
 
@@ -291,7 +281,7 @@ namespace RESANA {
 			const auto& entries = data->GetEntries();
 			for (auto& entry : entries)
 			{
-				if (entry->ProcessId() == selectedEntry->ProcessId()) {
+				if (entry->GetProcessId() == selectedEntry->GetProcessId()) {
 					data->SelectEntry(entry);
 					break;
 				}
@@ -310,6 +300,16 @@ namespace RESANA {
 				mProcessMap.Erase(it->second);
 				it = mProcessMap.begin(); // Reset iterator!
 			}
+		}
+	}
+
+	void ProcessManager::ResetAllRunningStatus()
+	{
+		// Set all process running status to false
+		std::scoped_lock slock(mProcessMap.GetMutex());
+		for (const auto& [id, entry] : mProcessMap)
+		{
+			entry->Running() = false;
 		}
 	}
 

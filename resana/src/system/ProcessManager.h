@@ -6,8 +6,6 @@
 #include "ProcessEntry.h"
 #include "ProcessContainer.h"
 
-#include <queue>
-
 namespace RESANA {
 
 	class ProcessManager final : public ConcurrentProcess
@@ -23,9 +21,6 @@ namespace RESANA {
 		std::shared_ptr<ProcessContainer> GetData();
 
 		void ReleaseData();
-
-		void ResetAllRunningStatus();
-
 
 	private:
 		ProcessManager();
@@ -45,6 +40,7 @@ namespace RESANA {
 		void SyncSelectionStatus(ProcessContainer* data) const;
 
 		void CleanMap();
+		void ResetAllRunningStatus();
 	private:
 		ProcessMap mProcessMap{};
 		std::shared_ptr<ProcessContainer> mProcessContainer{};
