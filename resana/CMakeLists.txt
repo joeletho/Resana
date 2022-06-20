@@ -6,11 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(RESANA_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set(RESANA_SOURCE_DIR "${RESANA_DIR}/src")
 set(RESANA_LIB_DIR "${RESANA_DIR}/lib")
+set(RESANA_ASSETS_DIR "${RESANA_DIR}/assets")
 
 set(GLAD_DIR "${RESANA_LIB_DIR}/glad")
 set(GLFW_DIR "${RESANA_LIB_DIR}/glfw")
 set(IMGUI_DIR "${RESANA_LIB_DIR}/imgui")
 set(SPDLOG_DIR "${RESANA_LIB_DIR}/spdlog")
+
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -57,6 +59,29 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         "spdlog"
         "pdh" # pdh.lib for Windows Pdh.h functions
         )
+
+# -------------------------------------------------------------------
+# Copy executable dependencies to CMake runtime output directory
+# -------------------------------------------------------------------
+
+# Copy library dlls -------------------------------------------
+#file(GLOB_RECURSE LIB_DLLS
+ #   "${RESANA_LIB_DIR}/*.dll"
+  #  )
+
+#foreach (dll ${LIB_DLLS})
+ #   file(COPY ${dll}
+  #      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+#endforeach (dll)
+# -------------------------------------------------------------
+
+add_custom_target(copy_assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${RESANA_ASSETS_DIR} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets
+        )
+
+add_dependencies(${PROJECT_NAME} copy_assets)
+# -----------------------------------------------------------------
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE=1)
 target_compile_definitions(${PROJECT_NAME} PUBLIC RS_ENABLE_ASSERTS=1 RS_DEBUG=1 RS_BUILD_DLL=1 BUILD_SHARED_LIB=1)
