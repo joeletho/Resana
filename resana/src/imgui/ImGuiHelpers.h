@@ -28,6 +28,7 @@ namespace ImGui {
 	static bool SelectableWrapped(const char* label, bool selected, ImGuiSelectableFlags flags, const float window_width, const char* uniqueId) {
 		ImFont* font = GetFont();
 		ImVec2 size = font->CalcTextSizeA(font->FontSize, GetContentRegionMax().x, window_width, label);
+		auto &style = ImGui::GetStyle();
 
 		if (Selectable(uniqueId, selected, flags, ImVec2(0.0, size.y))) {
 			return true;
@@ -39,14 +40,17 @@ namespace ImGui {
 		ImDrawList* draw_list = GetWindowDrawList();
 
 		ImVec4 clip_rect(p0.x, p0.y, p1.x + 5.0f, p1.y); // AddText() takes a ImVec4* here so let's convert.
-		draw_list->AddText(font, font->FontSize, text_pos, IM_COL32_WHITE, label, NULL,
+		draw_list->AddText(font, font->FontSize, text_pos, ImColor(style.Colors[ImGuiCol_Text]), label, NULL,
 			window_width, &clip_rect);
 
 		return false;
 	}
 
 		static bool Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const float window_width, const char* uniqueId) {
+
+
 		ImFont* font = GetFont();
+		auto &style = ImGui::GetStyle();
 
 		if (Selectable(uniqueId, selected, flags)) {
 			return true;
@@ -58,7 +62,7 @@ namespace ImGui {
 		ImDrawList* draw_list = GetWindowDrawList();
 
 		ImVec4 clip_rect(p0.x, p0.y, p1.x + 5.0f, p1.y); // AddText() takes a ImVec4* here so let's convert.
-		draw_list->AddText(font, font->FontSize, text_pos, IM_COL32_WHITE, label, NULL,
+		draw_list->AddText(font, font->FontSize, text_pos, ImColor(style.Colors[ImGuiCol_Text]), label, NULL,
 			window_width, &clip_rect);
 
 		return false;
