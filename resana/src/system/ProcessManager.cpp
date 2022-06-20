@@ -59,7 +59,7 @@ namespace RESANA {
 		{
 			// We wait a little bit to make the UI more streamlined -- otherwise, we may
 			// see some random flickering.
-			lc.WaitFor(lock, std::chrono::milliseconds(10), mDataReady);
+			lc.WaitFor(lock, std::chrono::milliseconds(20), mDataReady);
 		}
 		if (!mDataReady) { return {}; } // Is data is still not ready, return nothing.
 
