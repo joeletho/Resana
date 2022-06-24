@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <type_traits>
+
 #include <GLFW/glfw3.h>
 
 namespace RESANA {
