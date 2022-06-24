@@ -24,7 +24,7 @@ add_subdirectory("${IMGUI_DIR}")
 add_subdirectory("${SPDLOG_DIR}")
 
 if (MSVC)
-    #    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
 endif ()
 
 file(GLOB_RECURSE RESANA_SOURCES
@@ -64,23 +64,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 # Copy executable dependencies to CMake runtime output directory
 # -------------------------------------------------------------------
 
-# Copy library dlls -------------------------------------------
-#file(GLOB_RECURSE LIB_DLLS
- #   "${RESANA_LIB_DIR}/*.dll"
-  #  )
-
-#foreach (dll ${LIB_DLLS})
- #   file(COPY ${dll}
-  #      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-#endforeach (dll)
-# -------------------------------------------------------------
-
-add_custom_target(copy_assets
+add_custom_target(copyAssets
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${RESANA_ASSETS_DIR} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets
         )
 
-add_dependencies(${PROJECT_NAME} copy_assets)
+add_dependencies(${PROJECT_NAME} copyAssets)
 # -----------------------------------------------------------------
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE=1)
