@@ -7,6 +7,8 @@
 
 #include <memory>
 
+#include "system/ThreadPool.h"
+
 namespace RESANA {
 
 	class Application {
@@ -18,16 +20,18 @@ namespace RESANA {
 		void Run();
 
 		void Terminate();
-		bool IsMinimized() const;
+		[[nodiscard]] bool IsMinimized() const;
 
 		[[nodiscard]] Window& GetWindow() const { return *mWindow; }
+		[[nodiscard]] ThreadPool& GetThreadPool() const { return *mThreadPool; }
 
 		static Application& Get() { return *sInstance; }
 
 	private:
 		std::shared_ptr<Window> mWindow;
 		ImGuiLayer* mImGuiLayer;
-		LayerStack mLayerStack;
+		LayerStack<Layer> mLayerStack;
+		std::shared_ptr<ThreadPool> mThreadPool;
 		bool mRunning = true;
 		bool mMinimized = false;
 

@@ -6,6 +6,7 @@
 #include "Log.h"
 
 #include "perfdata/PerfManager.h"
+#include "system/ThreadPool.h"
 
 namespace RESANA {
 
@@ -23,11 +24,22 @@ namespace RESANA {
 		PerfManager::Init();
 		Renderer::Init();
 
+		mThreadPool.reset(new ThreadPool);
+		mThreadPool->Start();
+
 		mImGuiLayer = new ImGuiLayer();
 		PushLayer(mImGuiLayer);
 	}
 
-	Application::~Application() = default;
+	Application::~Application()
+	{
+		for (Layer* layer : mLayerStack)
+		{
+			layer->OnDetach();
+		}
+
+		mThreadPool->Stop();
+	}
 
 
 	void Application::PushLayer(Layer* layer)
@@ -38,6 +50,8 @@ namespace RESANA {
 
 	void Application::Run()
 	{
+		Timestep ts;
+
 		while (mRunning)
 		{
 			// Check if window has been closed
@@ -46,7 +60,7 @@ namespace RESANA {
 			if (!IsMinimized())
 			{
 				for (Layer* layer : mLayerStack) {
-					layer->OnUpdate();
+					layer->OnUpdate(ts);
 				}
 
 				ImGuiLayer::Begin();
