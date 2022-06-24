@@ -1,19 +1,17 @@
 #pragma once
 
-#include "MemoryPerf.h"
-
-#include <thread>
+#include "system/memory/MemoryPerformance.h"
 
 namespace RESANA {
 
-    class MemoryPerf;
+    class MemoryPerformance;
 
 
     class PerfManager {
     public:
         static void Init();
 
-        std::shared_ptr<MemoryPerf> GetMemory() { return mMemoryPerf; };
+        MemoryPerformance* GetMemory() { return mMemoryPerf; };
 
         static PerfManager *Get() { return sInstance; }
 
@@ -22,7 +20,7 @@ namespace RESANA {
         ~PerfManager();
 
     private:
-        std::shared_ptr<MemoryPerf> mMemoryPerf;
+        MemoryPerformance* mMemoryPerf;
         static PerfManager *sInstance;
     };
 

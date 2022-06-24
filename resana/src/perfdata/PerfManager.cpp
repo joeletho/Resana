@@ -1,5 +1,5 @@
-#include "PerfManager.h"
 #include <rspch.h>
+#include "PerfManager.h"
 
 #include <memory>
 
@@ -17,13 +17,13 @@ namespace RESANA
 
     PerfManager::PerfManager() 
     {
-        mMemoryPerf = std::make_shared<MemoryPerf>();
+        mMemoryPerf = MemoryPerformance::Get();
     }
 
     PerfManager::~PerfManager() 
     {
         sInstance = nullptr;
-        delete sInstance;
+        //delete sInstance;
     }
 
 } // RESANA
