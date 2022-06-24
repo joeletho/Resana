@@ -1,5 +1,7 @@
 #pragma once
 
+#include "helpers/Time.h"
+
 #include <string>
 
 namespace RESANA {
@@ -13,11 +15,11 @@ namespace RESANA {
 
         virtual void OnDetach() {}
 
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(Timestep ts) {}
 
         virtual void OnImGuiRender() {}
 
-        [[nodiscard]] inline const std::string &GetName() const { return mDebugName; }
+        [[nodiscard]] const std::string &GetName() const { return mDebugName; }
 
     private:
         std::string mDebugName;
