@@ -25,8 +25,8 @@ namespace RESANA
 		[[nodiscard]] ProcessEntry* FindEntry(uint32_t procId) const;
 
 		void AddEntry(ProcessEntry* entry);
-		void SelectEntry(uint32_t procId, bool overwrite = false);
-		void SelectEntry(ProcessEntry* entry, bool overwrite = false);
+		void SelectEntry(uint32_t procId, bool preserve = false);
+		void SelectEntry(ProcessEntry* entry, bool preserve = false);
 		void EraseEntry(const ProcessEntry* entry);
 		void Copy(ProcessContainer* other);
 

@@ -37,22 +37,28 @@ namespace RESANA {
 		mTickRate = ts;
 		mProcessManager->SetUpdateSpeed(mTickRate);
 
-		auto& app = Application::Get();
-		auto& threadPool = app.GetThreadPool();
-		threadPool.Queue([&]
-			{
-				const auto& data = mProcessManager->GetData();
+		if (IsPanelOpen())
+		{
+			auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+			threadPool.Queue([&]
+				{
+					const auto& data = mProcessManager->GetData();
 
-				if (data) {
-					static std::mutex mutex;
-					// Be sure to let the original data know what entry is selected (if any) before
-					//	reset mDataCache. If the new data has that entry, it will be selected from
-					//	within data and then copied to mDataCache.
-					data->SelectEntry(mDataCache.GetSelectedEntry(), true);
-					mDataCache.Copy(data.get());
-				}
-				mProcessManager->ReleaseData();
-			});
+					if (data) {
+						static std::mutex mutex;
+						// Be sure to let the original data know what entry is selected (if any) before
+						//	reset mDataCache. If the new data has that entry, it will be selected from
+						//	within data and then copied to mDataCache.
+						if (auto entry = mDataCache.GetSelectedEntry()) {
+							data->SelectEntry(entry->GetProcessId(), true);
+
+						}
+						mDataCache.Copy(data.get());
+					}
+					mProcessManager->ReleaseData();
+				});
+		}
 	}
 
 	void ProcessPanel::OnImGuiRender()
@@ -61,11 +67,10 @@ namespace RESANA {
 
 	void ProcessPanel::ShowPanel(bool* pOpen)
 	{
-		if (*pOpen)
+		if ((mPanelOpen = *pOpen))
 		{
 			if (ImGui::BeginChild("Details", ImGui::GetContentRegionAvail())) {
 				ProcessManager::Run();
-
 				ShowProcessTable();
 			}
 			ImGui::EndChild();

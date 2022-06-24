@@ -9,7 +9,7 @@ namespace RESANA
 	ProcessContainer::ProcessContainer() = default;
 
 	ProcessContainer::ProcessContainer(const ProcessContainer* other)
-		:mEntries(other->mEntries) {}
+		:mEntries(other->mEntries), mSelectedEntry(other->GetSelectedEntry()) {}
 
 
 	ProcessContainer::~ProcessContainer()
@@ -60,29 +60,29 @@ namespace RESANA
 		mEntries.emplace_back(entry);
 	}
 
-	void ProcessContainer::SelectEntry(const uint32_t procId, bool overwrite)
+	void ProcessContainer::SelectEntry(const uint32_t procId, bool preserve)
 	{
 		if (auto* entry = FindEntry(procId))
 		{
-			if (overwrite)
-			{
-				entry->Select();
-				mSelectedEntry = entry;
-			}
-			else if (entry->IsSelected())
-			{
-				entry->Deselect();
-				mSelectedEntry = nullptr;
-			}
-			else
-			{
-				if (mSelectedEntry) {
+			if (mSelectedEntry) {
+				if (mSelectedEntry->IsSelected())
+				{
 					mSelectedEntry->Deselect();
 				}
 
-				entry->Select();
-				mSelectedEntry = entry;
+				if (mSelectedEntry->GetProcessId() == entry->GetProcessId())
+				{
+					// Keep this selected
+					if (!preserve)
+					{
+						mSelectedEntry = nullptr; // Deselect currently selected entry
+					}
+					return;
+				}
 			}
+
+			mSelectedEntry = entry;
+			mSelectedEntry->Select();
 		}
 		else
 		{
@@ -90,11 +90,12 @@ namespace RESANA
 		}
 	}
 
-	void ProcessContainer::SelectEntry(ProcessEntry* entry, bool overwrite)
+	void ProcessContainer::SelectEntry(ProcessEntry* entry, bool preserve)
 	{
 		if (entry) {
-			SelectEntry(entry->GetProcessId(), overwrite);
-		} else
+			SelectEntry(entry->GetProcessId(), preserve);
+		}
+		else
 		{
 			mSelectedEntry = nullptr;
 		}
@@ -121,6 +122,12 @@ namespace RESANA
 	{
 		if (this == other) { return; }
 
+		uint32_t backupId = -1;
+
+		if (const auto* currSelected = other->GetSelectedEntry()) {
+			backupId = currSelected->GetProcessId();
+		}
+
 		Clear(mMutex);
 
 		std::scoped_lock lock1(mMutex);
@@ -130,7 +137,13 @@ namespace RESANA
 			mEntries.emplace_back(new ProcessEntry(entry));
 		}
 
-		mSelectedEntry = other->GetSelectedEntry();
+		if (mSelectedEntry)
+		{
+			if (mSelectedEntry->GetProcessId() == backupId)
+				return;
+		}
+
+		SelectEntry(backupId);
 	}
 
 }

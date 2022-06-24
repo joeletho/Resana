@@ -21,12 +21,15 @@ namespace RESANA {
 		void ShowPanel(bool* pOpen) override;
 		void SetTickRate(Timestep tickRate) override;
 
+		bool IsPanelOpen() const { return mPanelOpen; };
+
 	private:
 		void ShowProcessTable();
 	private:
 		ProcessManager* mProcessManager = nullptr;
 		ProcessContainer mDataCache{};
 		Timestep mTickRate{};
+		bool mPanelOpen = false;
 	};
 
 } // RESANA
