@@ -17,6 +17,8 @@ namespace RESANA
 		void OnDetach() override;
 		void OnImGuiRender() override;
 
+		void SetTaskManagerTheme();
+
 	private:
 		static void ShowImGuiDockspace();
 
