@@ -2,8 +2,11 @@
 
 #include "core/Layer.h"
 
+#include "panels/PerformancePanel.h"
 #include "panels/ProcessPanel.h"
-#include "panels/ResourcePanel.h"
+
+#include "helpers/Time.h"
+#include "panels/ResourceAnalyzer.h"
 
 namespace RESANA
 {
@@ -16,12 +19,13 @@ namespace RESANA
 
 		void OnAttach() override;
 		void OnDetach() override;
-		void OnUpdate() override;
+		void OnUpdate(Timestep ts) override;
 		void OnImGuiRender() override;
 
 	private:
-		ProcessPanel* mProcessPanel = nullptr;
-		ResourcePanel* mResourcePanel = nullptr;
+		ResourceAnalyzer* mResanaPanel = nullptr;
+		//ProcessPanel* mProcessPanel = nullptr;
+		//PerformancePanel* mPerformancePanel = nullptr;
 	};
 
 }
