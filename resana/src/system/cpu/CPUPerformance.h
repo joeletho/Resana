@@ -1,7 +1,9 @@
 #pragma once
 
-#include "ConcurrentProcess.h"
+#include "system/base/ConcurrentProcess.h"
 #include "ProcessorData.h"
+
+#include "helpers/Time.h"
 
 #include <queue>
 #include <deque>
@@ -25,6 +27,9 @@ namespace RESANA {
 
 		// Must be called after GetData() to unlock mutex
 		void ReleaseData();
+		void SetUpdateSpeed(Timestep ts = 1000);
+
+		bool IsRunning() const;
 
 	private:
 		CPUPerformance();
@@ -57,6 +62,7 @@ namespace RESANA {
 		const unsigned int MAX_LOAD_COUNT = 3;
 
 		bool mRunning = false;
+		Timestep mUpdateSpeed{};
 		std::atomic<bool> mDataReady;
 		std::atomic<bool> mDataBusy;
 

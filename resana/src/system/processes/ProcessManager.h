@@ -1,10 +1,12 @@
 #pragma once
 
-#include "ConcurrentProcess.h"
+#include "system/base/ConcurrentProcess.h"
 
 #include "ProcessMap.h"
 #include "ProcessEntry.h"
 #include "ProcessContainer.h"
+
+#include "helpers/Time.h"
 
 namespace RESANA {
 
@@ -21,6 +23,11 @@ namespace RESANA {
 		std::shared_ptr<ProcessContainer> GetData();
 
 		void ReleaseData();
+
+		void SetUpdateSpeed(Timestep ts = 1000);
+		uint32_t GetUpdateSpeed() const;
+
+		bool IsRunning() const;
 
 	private:
 		ProcessManager();
@@ -46,6 +53,7 @@ namespace RESANA {
 		std::shared_ptr<ProcessContainer> mProcessContainer{};
 
 		bool mRunning = false;
+		Timestep mUpdateSpeed{};
 		std::atomic<bool> mDataPrepared;
 		std::atomic<bool> mDataReady;
 		std::atomic<bool> mDataBusy;

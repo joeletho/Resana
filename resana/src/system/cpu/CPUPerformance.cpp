@@ -23,15 +23,15 @@ namespace RESANA {
 
 	CPUPerformance::~CPUPerformance()
 	{
-		Sleep(1000); // Let detached threads finish before destructing
+		sInstance = nullptr; // reset static instance before destructing
+
+		Sleep(mUpdateSpeed); // Let detached threads finish before destructing
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
 
 		auto& lc = GetLockContainer();
 		while (mDataBusy) { lc.Wait(lock); }
-
-		sInstance = nullptr;
 	}
 
 	void CPUPerformance::InitCPUData()
@@ -72,29 +72,35 @@ namespace RESANA {
 			sInstance = Get();
 		}
 
-		if (!sInstance->mRunning)
+		if (!sInstance->IsRunning())
 		{
-			auto prepThread = std::thread([&] { sInstance->PrepareDataThread(); });		prepThread.detach();
-			auto processThread(std::thread([&] { sInstance->ProcessDataThread(); }));	processThread.detach();
-			auto calcThread(std::thread([&] { sInstance->CalcProcessLoadThread(); }));	calcThread.detach();
-
 			sInstance->mRunning = true;
+
+			auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+
+			threadPool.Queue([&] { sInstance->PrepareDataThread(); });
+			threadPool.Queue([&] { sInstance->ProcessDataThread(); });
+			threadPool.Queue([&] { sInstance->CalcProcessLoadThread(); });
+
 		}
 	}
 
 	void CPUPerformance::Stop()
 	{
-		if (sInstance && sInstance->mRunning)
+		if (sInstance && sInstance->IsRunning())
 		{
 			sInstance->mRunning = false;
-
-			std::thread kill([&]() { sInstance->Terminate(); }); kill.detach();
+			auto& lc = sInstance->GetLockContainer();
+			lc.NotifyAll();
+			auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+			threadPool.Queue([&] {sInstance->Terminate(); });
 		}
 	}
 
 	void CPUPerformance::Terminate()
 	{
-		mRunning = false;
 		this->~CPUPerformance();
 	}
 
@@ -112,7 +118,7 @@ namespace RESANA {
 
 	std::shared_ptr<ProcessorData> CPUPerformance::GetData()
 	{
-		RS_CORE_ASSERT(mRunning, "Process is not currently running! Call 'CPUPerformance::Run()' to start process.");
+		RS_CORE_ASSERT(IsRunning(), "Process is not currently running! Call 'CPUPerformance::Run()' to start process.");
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
@@ -195,26 +201,32 @@ namespace RESANA {
 		lc.NotifyAll();
 	}
 
+	void CPUPerformance::SetUpdateSpeed(Timestep ts)
+	{
+		mUpdateSpeed = ts;
+	}
+
+	bool CPUPerformance::IsRunning() const
+	{
+		return mRunning;
+	}
+
 	void CPUPerformance::PrepareDataThread()
 	{
-		while (mRunning) { const auto data = PrepareData(); PushData(data); }
+		while (IsRunning())
+		{
+			const auto data = PrepareData();
+			PushData(data);
+		}
 	}
 
 	void CPUPerformance::ProcessDataThread()
 	{
-		std::vector<std::thread> localThreads;
-
-		while (mRunning)
+		while (IsRunning())
 		{
-			auto data = ExtractData();
+			auto* data = ExtractData();
 			ProcessData(data);
-			localThreads.emplace_back(std::thread([&data, this]() {SetData(std::ref(data)); }));
-		}
-
-		// Join any remaining threads before terminating
-		for (auto& th : localThreads)
-		{
-			if (th.joinable()) { th.join(); }
+			SetData(data);
 		}
 	}
 
@@ -260,7 +272,7 @@ namespace RESANA {
 			&data->GetBuffer(), &data->GetSize(), processorRef);
 
 		if (pdhStatus != ERROR_SUCCESS) {
-		RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
+			RS_CORE_ERROR("PdhGetFormattedCounterArray failed with 0x{0}", pdhStatus);
 			success = false;
 		}
 
@@ -270,8 +282,8 @@ namespace RESANA {
 		else
 		{
 			// In case of an error, free the memory
-			data = nullptr;
 			delete data;
+			data = nullptr;
 		}
 
 		return data;
@@ -281,11 +293,15 @@ namespace RESANA {
 	{
 		if (!data) { return; }
 
+		std::mutex mutex;
 		auto& lc = GetLockContainer();
+		std::lock(mutex, lc.GetMutex());
+		{
+			std::lock_guard lock1(mutex, std::adopt_lock);
+			std::lock_guard lock2(lc.GetMutex(), std::adopt_lock);
+			mDataQueue.push(data);
 
-		std::scoped_lock slock(lc.GetMutex());
-		mDataQueue.push(data);
-
+		}
 		lc.NotifyAll();
 	}
 
@@ -293,14 +309,23 @@ namespace RESANA {
 	{
 		std::mutex mutex;
 		std::unique_lock<std::mutex>lock(mutex);
-
 		auto& lc = GetLockContainer();
+		ProcessorData* data = nullptr;
 
-		while (mDataQueue.empty()) { lc.Wait(lock); }
-		std::scoped_lock slock(lc.GetMutex());
+		while (mDataQueue.empty())
+		{
+			if (!IsRunning()) { return nullptr; }
+			lc.Wait(lock);
+		}
+		lock.unlock();
+		std::lock(mutex, lc.GetMutex());
+		{
+			std::lock_guard lock1(mutex, std::adopt_lock);
+			std::lock_guard lock2(lc.GetMutex(), std::adopt_lock);
 
-		auto& data = mDataQueue.front();
-		mDataQueue.pop();
+			data = mDataQueue.front();
+			mDataQueue.pop();
+		}
 
 		lc.NotifyAll();
 
@@ -310,6 +335,9 @@ namespace RESANA {
 	void CPUPerformance::ProcessData(ProcessorData* data)
 	{
 		if (!data || data->GetProcessorRef() == nullptr) { return; }
+
+		std::mutex mutex;
+		auto& lc = GetLockContainer();
 
 		const auto processorPtr = data->GetProcessorRef();
 
@@ -324,8 +352,9 @@ namespace RESANA {
 
 			if (std::strcmp(name, "_Total") == 0)
 			{
-				std::mutex mutex;
-				std::scoped_lock slock(mutex);
+				std::lock(mutex, lc.GetMutex());
+				std::lock_guard lock1(mutex, std::adopt_lock);
+				std::lock_guard lock2(lc.GetMutex(), std::adopt_lock);
 
 				// Remove the oldest value
 				if (mCPULoadValues.size() == MAX_LOAD_COUNT) {
@@ -345,7 +374,7 @@ namespace RESANA {
 
 	void CPUPerformance::CalcProcessLoadThread()
 	{
-		while (mRunning) { CalcProcessLoad(); Sleep(1000); }
+		while (mRunning) { CalcProcessLoad(); Sleep(mUpdateSpeed); }
 	}
 
 	void CPUPerformance::CalcProcessLoad()
@@ -376,20 +405,27 @@ namespace RESANA {
 	{
 		if (!sInstance || !data) { return; }
 
-		auto sortThread = std::thread([&data, this]() { SortAscending(std::ref(data)); });
+		SortAscending(data);
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
-
 		auto& lc = GetLockContainer();
 
-		while (mDataBusy) { lc.Wait(lock); }
+		while (mDataBusy)
+		{
+			if (!IsRunning()) { return; }
+			lc.Wait(lock);
+		}
+		lock.unlock();
+
 		mDataReady = false;
-		lc.NotifyAll(); // Notify all that the state has changed
+		std::lock(mutex, lc.GetMutex());
+		{
+			std::lock_guard lock1(mutex, std::adopt_lock);
+			std::lock_guard lock2(lc.GetMutex(), std::adopt_lock);
 
-		sortThread.join();
-		mProcessorData.reset(data);
-
+			mProcessorData.reset(data);
+		}
 		mDataReady = true;
 		lc.NotifyAll();
 	}

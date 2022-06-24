@@ -3,6 +3,8 @@
 #include <vector>
 #include <mutex>
 
+#include "ProcessEntry.h"
+
 namespace RESANA
 {
 	class ProcessEntry;
@@ -19,17 +21,36 @@ namespace RESANA
 
 		std::vector<ProcessEntry*>& GetEntries();
 		[[nodiscard]] ProcessEntry* GetSelectedEntry() const;
+		[[nodiscard]] ProcessEntry* FindEntry(const ProcessEntry* entry) const;
+		[[nodiscard]] ProcessEntry* FindEntry(uint32_t procId) const;
 
 		void AddEntry(ProcessEntry* entry);
-		void SelectEntry(ProcessEntry* entry);
+		void SelectEntry(uint32_t procId, bool overwrite = false);
+		void SelectEntry(ProcessEntry* entry, bool overwrite = false);
 		void EraseEntry(const ProcessEntry* entry);
-		void Clear();
+		void Copy(ProcessContainer* other);
+
+		template <class _MutTy>
+		void Clear(_MutTy& mutex);
 
 	private:
 		std::mutex mMutex{};
 		std::vector<ProcessEntry*> mEntries{};
-		
+
 		ProcessEntry* mSelectedEntry = nullptr;
 	};
+
+	template <class _MutTy>
+	void ProcessContainer::Clear(_MutTy& mutex)
+	{
+		std::scoped_lock slock(mutex);
+		for (auto entry : mEntries)
+		{
+			delete entry;
+			entry = nullptr;
+		}
+
+		mEntries.clear();
+	}
 
 }

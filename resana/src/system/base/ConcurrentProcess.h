@@ -1,6 +1,8 @@
 #pragma once
 
-#include "SafeLockContainer.h"
+#include "system/SafeLockContainer.h"
+
+#include "system/ThreadPool.h"
 
 namespace RESANA
 {
