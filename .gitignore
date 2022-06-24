@@ -12,5 +12,5 @@ cmake-*
 .scratch/
 out/
 .vs/
-bin/pingme.txt
-bin/ResourcePanel.obj
+bin/**
+Folder.**
