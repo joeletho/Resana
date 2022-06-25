@@ -62,31 +62,22 @@ namespace RESANA
 
 	void ProcessContainer::SelectEntry(const uint32_t procId, bool preserve)
 	{
-		if (auto* entry = FindEntry(procId))
-		{
-			if (mSelectedEntry) {
-				if (mSelectedEntry->IsSelected())
-				{
-					mSelectedEntry->Deselect();
-				}
+		auto* entry = FindEntry(procId);
 
-				if (mSelectedEntry->GetProcessId() == entry->GetProcessId())
-				{
-					// Keep this selected
-					if (!preserve)
-					{
-						mSelectedEntry = nullptr; // Deselect currently selected entry
-					}
+		if (mSelectedEntry) {
+			if (mSelectedEntry->GetProcessId() == entry->GetProcessId())
+			{
+				// Keep this selected
+				if (preserve) {
 					return;
 				}
 			}
 
-			mSelectedEntry = entry;
-			mSelectedEntry->Select();
+			mSelectedEntry->Deselect();
 		}
-		else
-		{
-			mSelectedEntry = nullptr;
+
+		if ((mSelectedEntry = entry)) {
+			mSelectedEntry->Select();
 		}
 	}
 
