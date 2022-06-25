@@ -31,11 +31,6 @@ namespace RESANA {
 			std::chrono::high_resolution_clock::now() - mTimeStarted).count() * 1E-6);
 	};
 
-
-	void Time::Sleep(int sleep_time_ms) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_ms));
-	}
-
 	long long Time::GetTime() {
 		return std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::high_resolution_clock::now() - mTimeStarted).count();

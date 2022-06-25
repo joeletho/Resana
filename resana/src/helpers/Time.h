@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace RESANA {
 
 #define CLOCKS_PER_HOUR 3600000;
@@ -17,7 +19,13 @@ namespace RESANA {
 
 		static long long GetTime();
 		static std::string GetTimeFormatted();
-		static void Sleep(int sleep_time_ms);
+
+		template<typename N>
+		static void Sleep(N sleepTime_ms)
+		{
+			std::this_thread::sleep_for(std::chrono
+				::milliseconds((int)sleepTime_ms));
+		}
 
 	private:
 		Time();
@@ -52,8 +60,18 @@ namespace RESANA {
 		float mTime;
 	};
 
+
 	class TimeTick {
 	public:
+		enum Rate {
+			Fast = 500,
+			Normal = 1000,
+			Slow = 2000
+		};
+		inline static Rate Rate;
+
+	public:
+
 		TimeTick();
 		~TimeTick();
 		void Stop();
