@@ -43,18 +43,22 @@ namespace RESANA {
 			auto& threadPool = app.GetThreadPool();
 			threadPool.Queue([&]
 				{
-					const auto& data = mProcessManager->GetData();
-
-					if (data) {
+					if (const auto& data = mProcessManager->GetData())
+					{
+						// Make a deep copy
 						static std::mutex mutex;
-						// Be sure to let the original data know what entry is selected (if any) before
-						//	reset mDataCache. If the new data has that entry, it will be selected from
-						//	within data and then copied to mDataCache.
-						if (auto entry = mDataCache.GetSelectedEntry()) {
-							data->SelectEntry(entry->GetProcessId(), true);
 
+						// Be sure to let the original data know what entry is selected (if any) before
+						//	resetting mDataCache. If the new data has that entry, it will be selected from
+						//	within data and then reselected in mDataCache.
+						uint32_t backupId = -1;
+						if (const auto selected = mDataCache.GetSelectedEntry())
+						{
+							backupId = selected->GetProcessId();
 						}
+
 						mDataCache.Copy(data.get());
+						mDataCache.SelectEntry(backupId);
 					}
 					mProcessManager->ReleaseData();
 				});
