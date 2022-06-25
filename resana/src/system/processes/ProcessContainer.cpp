@@ -122,12 +122,6 @@ namespace RESANA
 	{
 		if (this == other) { return; }
 
-		uint32_t backupId = -1;
-
-		if (const auto* currSelected = other->GetSelectedEntry()) {
-			backupId = currSelected->GetProcessId();
-		}
-
 		Clear(mMutex);
 
 		std::scoped_lock lock1(mMutex);
@@ -136,14 +130,6 @@ namespace RESANA
 		for (const auto* entry : other->GetEntries()) {
 			mEntries.emplace_back(new ProcessEntry(entry));
 		}
-
-		if (mSelectedEntry)
-		{
-			if (mSelectedEntry->GetProcessId() == backupId)
-				return;
-		}
-
-		SelectEntry(backupId);
 	}
 
 }
