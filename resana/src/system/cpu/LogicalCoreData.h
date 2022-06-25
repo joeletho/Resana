@@ -23,16 +23,16 @@ namespace RESANA
 	};
 
 
-	class ProcessorData
+	class LogicalCoreData
 	{
 	public:
-		ProcessorData();
-		explicit ProcessorData(const ProcessorData* other);
-		~ProcessorData();
+		LogicalCoreData();
+		explicit LogicalCoreData(LogicalCoreData* other);
+		~LogicalCoreData();
 
 		std::mutex& GetMutex();
 
-		std::vector<std::shared_ptr<PdhItem>>& GetProcessors();
+		std::vector<PdhItem*>& GetProcessors();
 
 		void SetProcessorRef(PdhItem* ref);
 		PdhItem* GetProcessorRef();
@@ -43,12 +43,13 @@ namespace RESANA
 
 
 		void Clear();
+		void Copy(LogicalCoreData* other);
 
-		ProcessorData& operator=(ProcessorData* rhs);
+		LogicalCoreData& operator=(LogicalCoreData* rhs);
 
 	private:
 		std::mutex mMutex{};
-		std::vector<std::shared_ptr<PdhItem>> mProcessors{};
+		std::vector<PdhItem*> mProcessors{};
 		PdhItem* mProcessorRef = nullptr;
 		DWORD mSize = 0;
 		DWORD mBuffer = 0;
