@@ -56,20 +56,9 @@ namespace RESANA {
 	{
 		RS_CORE_ASSERT(IsRunning(), "Process is not currently running! Call 'ProcessManager::Run()' to start process.");
 
-		std::mutex mutex;
-		std::unique_lock<std::mutex> lock(mutex);
-		auto& lc = GetLockContainer();
-
-		if (!mDataReady)
-		{
-			// We wait a little bit to make the UI more streamlined -- otherwise, we may
-			// see some random flickering.
-			lc.WaitFor(lock, std::chrono::milliseconds(20), mDataReady);
-		}
 		if (!mDataReady) { return {}; } // Is data is still not ready, return nothing.
 
 		mDataBusy = true;
-		lc.NotifyAll();
 
 		return mProcessContainer;
 	}
@@ -281,8 +270,6 @@ namespace RESANA {
 	{
 		if (!sInstance || !data) { return; }
 
-		SyncSelectionStatus(data);
-
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
 		auto& lc = GetLockContainer();
@@ -349,21 +336,6 @@ namespace RESANA {
 			return true;
 		}
 		return false;
-	}
-
-	void ProcessManager::SyncSelectionStatus(ProcessContainer* data) const
-	{
-		if (const auto& selectedEntry = mProcessContainer->GetSelectedEntry())
-		{
-			const auto& entries = data->GetEntries();
-			for (auto& entry : entries)
-			{
-				if (entry->GetProcessId() == selectedEntry->GetProcessId()) {
-					data->SelectEntry(entry);
-					break;
-				}
-			}
-		}
 	}
 
 	void ProcessManager::CleanMap()

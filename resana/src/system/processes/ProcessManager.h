@@ -44,7 +44,6 @@ namespace RESANA {
 
 		bool UpdateProcess(const ProcessEntry* entry) const;
 		bool UpdateProcess(const PROCESSENTRY32& pe32) const;
-		void SyncSelectionStatus(ProcessContainer* data) const;
 
 		void CleanMap();
 		void ResetAllRunningStatus();
