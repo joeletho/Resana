@@ -47,7 +47,7 @@ namespace RESANA
 		MEMORYSTATUSEX mMemoryInfo{};
 		PROCESS_MEMORY_COUNTERS_EX mPMC{};
 		bool mRunning = false;
-		Timestep mUpdateSpeed{};
+		uint32_t mUpdateInterval{};
 
 		static MemoryPerformance* sInstance;
 

@@ -27,7 +27,7 @@ namespace RESANA {
 
 		// Must be called after GetData() to unlock mutex
 		void ReleaseData();
-		void SetUpdateSpeed(Timestep ts = 1000);
+		void SetUpdateInterval(Timestep ts = 1000);
 
 		bool IsRunning() const;
 
@@ -62,7 +62,7 @@ namespace RESANA {
 		const unsigned int MAX_LOAD_COUNT = 3;
 
 		bool mRunning = false;
-		Timestep mUpdateSpeed{};
+		uint32_t mUpdateInterval{};
 		std::atomic<bool> mDataReady;
 		std::atomic<bool> mDataBusy;
 

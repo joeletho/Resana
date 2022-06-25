@@ -2,12 +2,14 @@
 #include "MemoryPerformance.h"
 
 #include "core/Application.h"
+#include "core/Core.h"
 
 namespace RESANA {
 
 	MemoryPerformance* MemoryPerformance::sInstance = nullptr;
 
 	MemoryPerformance::MemoryPerformance()
+		: mUpdateInterval(TimeTick::Rate::Normal)
 	{
 		mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	}
@@ -16,7 +18,7 @@ namespace RESANA {
 	{
 		sInstance = nullptr;
 
-		Time::Sleep((uint32_t)1000);
+		Time::Sleep(mUpdateInterval);
 	}
 
 	MemoryPerformance* MemoryPerformance::Get()
@@ -35,13 +37,14 @@ namespace RESANA {
 
 		if (!sInstance->IsRunning())
 		{
+			sInstance->mRunning = true;
+			sInstance->mUpdateInterval = TimeTick::Rate::Normal;
+
 			auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 
 			threadPool.Queue([&] { sInstance->UpdateMemoryInfo(); });
 			threadPool.Queue([&] { sInstance->UpdatePMC(); });
-
-			sInstance->mRunning = true;
 		}
 	}
 
@@ -101,7 +104,8 @@ namespace RESANA {
 
 	void MemoryPerformance::SetUpdateSpeed(Timestep ts)
 	{
-		mUpdateSpeed = ts;
+		RS_CORE_ASSERT(IsRunning(), "MemoryPerformance not running! Did you forget to call 'Run()'?")
+		mUpdateInterval = ts;
 	}
 
 	void MemoryPerformance::UpdateMemoryInfo()
@@ -110,7 +114,7 @@ namespace RESANA {
 		{
 			GlobalMemoryStatusEx(&mMemoryInfo);
 
-			Sleep((uint32_t)mUpdateSpeed);
+			Sleep((uint32_t)mUpdateInterval);
 		}
 	}
 
@@ -121,7 +125,7 @@ namespace RESANA {
 			GetProcessMemoryInfo(GetCurrentProcess(),
 				(PROCESS_MEMORY_COUNTERS*)&mPMC, sizeof(mPMC));
 
-			Sleep((uint32_t)mUpdateSpeed);
+			Sleep((uint32_t)mUpdateInterval);
 		}
 	}
 

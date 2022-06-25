@@ -16,7 +16,7 @@ namespace RESANA {
 	ProcessManager* ProcessManager::sInstance = nullptr;
 
 	ProcessManager::ProcessManager()
-		: ConcurrentProcess("ProcessManager"), mDataReady(false), mDataBusy(false)
+		: ConcurrentProcess("ProcessManager"), mDataReady(false), mDataBusy(false), mUpdateInterval(TimeTick::Rate::Normal)
 	{
 		mProcessContainer.reset(new ProcessContainer);
 	}
@@ -25,7 +25,7 @@ namespace RESANA {
 	{
 		sInstance = nullptr; // reset static instance before destructing
 
-		Sleep((uint32_t)mUpdateSpeed); // Let detached threads finish before 
+		Time::Sleep(mUpdateInterval); // Let detached threads finish before 
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
@@ -36,8 +36,8 @@ namespace RESANA {
 
 	void ProcessManager::Terminate()
 	{
-		auto& lc = GetLockContainer();
 		mRunning = false;
+		auto& lc = GetLockContainer();
 		lc.NotifyAll();
 
 		this->~ProcessManager();
@@ -72,12 +72,13 @@ namespace RESANA {
 
 	void ProcessManager::SetUpdateSpeed(Timestep ts)
 	{
-		mUpdateSpeed = ts;
+		RS_CORE_ASSERT(IsRunning(), "ProcessManager not running! Did you forget to call 'Run()'?")
+		mUpdateInterval = ts;
 	}
 
 	uint32_t ProcessManager::GetUpdateSpeed() const
 	{
-		return (uint32_t)mUpdateSpeed;
+		return mUpdateInterval;
 	}
 
 	bool ProcessManager::IsRunning() const
@@ -115,7 +116,6 @@ namespace RESANA {
 			auto& lc = sInstance->GetLockContainer();
 			lc.NotifyAll();
 
-
 			auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 			threadPool.Queue([&]() { sInstance->Terminate(); });
@@ -134,7 +134,7 @@ namespace RESANA {
 				mDataPrepared = true;
 				lc.NotifyAll();
 			}
-			Time::Sleep(mUpdateSpeed);
+			Time::Sleep(mUpdateInterval);
 		}
 	}
 

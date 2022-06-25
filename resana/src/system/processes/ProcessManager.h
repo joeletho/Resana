@@ -52,7 +52,7 @@ namespace RESANA {
 		std::shared_ptr<ProcessContainer> mProcessContainer{};
 
 		bool mRunning = false;
-		Timestep mUpdateSpeed{};
+		uint32_t mUpdateInterval{};
 		std::atomic<bool> mDataPrepared;
 		std::atomic<bool> mDataReady;
 		std::atomic<bool> mDataBusy;

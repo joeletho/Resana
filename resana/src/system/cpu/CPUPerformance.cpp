@@ -9,14 +9,15 @@
 #include <mutex>
 
 #include <PdhMsg.h>
+#include <Psapi.h>
 #include <Windows.h>
-#include <synchapi.h>
 
 namespace RESANA {
 
 	CPUPerformance* CPUPerformance::sInstance = nullptr;
 
-	CPUPerformance::CPUPerformance() : ConcurrentProcess("CPUPerformance")
+	CPUPerformance::CPUPerformance()
+		: ConcurrentProcess("CPUPerformance"), mUpdateInterval(TimeTick::Rate::Normal)
 	{
 		mLogicalCoreData.reset(new LogicalCoreData);
 	}
@@ -25,7 +26,7 @@ namespace RESANA {
 	{
 		sInstance = nullptr; // reset static instance before destructing
 
-		Sleep(mUpdateSpeed); // Let detached threads finish before destructing
+		Time::Sleep(mUpdateInterval); // Let detached threads finish before destructing
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
@@ -76,13 +77,12 @@ namespace RESANA {
 		{
 			sInstance->mRunning = true;
 
-			auto& app = Application::Get();
+			const auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 
 			threadPool.Queue([&] { sInstance->PrepareDataThread(); });
 			threadPool.Queue([&] { sInstance->ProcessDataThread(); });
 			threadPool.Queue([&] { sInstance->CalcProcessLoadThread(); });
-
 		}
 	}
 
@@ -170,7 +170,7 @@ namespace RESANA {
 			RS_CORE_ERROR("PdhCollectQueryData failed with 0x{0}", pdhStatus);
 		}
 
-		SleepEx(1000, false); // Sleep for one second.
+		Time::Sleep(mUpdateInterval); // Sleep for one second.
 
 		pdhStatus = PdhCollectQueryData(mLoadCounter.Query);
 		if (pdhStatus == ERROR_SUCCESS)
@@ -201,9 +201,10 @@ namespace RESANA {
 		lc.NotifyAll();
 	}
 
-	void CPUPerformance::SetUpdateSpeed(Timestep ts)
+	void CPUPerformance::SetUpdateInterval(Timestep ts)
 	{
-		mUpdateSpeed = ts;
+		RS_CORE_ASSERT(IsRunning(), "CPUPerformance not running! Did you forget to call 'Run()'?");
+		mUpdateInterval = ts;
 	}
 
 	bool CPUPerformance::IsRunning() const
@@ -245,7 +246,7 @@ namespace RESANA {
 			success = false;
 		}
 
-		Time::Sleep(1000); // Sleep for 1 second on this thread.
+		Time::Sleep(mUpdateInterval); // Sleep for 1 second on this thread.
 
 		pdhStatus = PdhCollectQueryData(mCPUCounter.Query);
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -253,6 +254,8 @@ namespace RESANA {
 			success = false;
 		}
 
+
+		/* FAILS HERE */
 		// Get the required size of the data buffer.
 		pdhStatus = PdhGetFormattedCounterArray(mCPUCounter.Counter, PDH_FMT_DOUBLE,
 			&data->GetBuffer(), &data->GetSize(), processorRef);
@@ -375,7 +378,7 @@ namespace RESANA {
 
 	void CPUPerformance::CalcProcessLoadThread()
 	{
-		while (mRunning) { CalcProcessLoad(); Sleep(mUpdateSpeed); }
+		while (mRunning) { CalcProcessLoad(); Time::Time::Sleep(mUpdateInterval); }
 	}
 
 	void CPUPerformance::CalcProcessLoad()
