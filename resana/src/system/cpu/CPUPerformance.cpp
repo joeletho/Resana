@@ -18,7 +18,7 @@ namespace RESANA {
 
 	CPUPerformance::CPUPerformance() : ConcurrentProcess("CPUPerformance")
 	{
-		mProcessorData.reset(new ProcessorData);
+		mLogicalCoreData.reset(new LogicalCoreData);
 	}
 
 	CPUPerformance::~CPUPerformance()
@@ -116,7 +116,7 @@ namespace RESANA {
 		return sInstance;
 	}
 
-	std::shared_ptr<ProcessorData> CPUPerformance::GetData()
+	std::shared_ptr<LogicalCoreData> CPUPerformance::GetData()
 	{
 		RS_CORE_ASSERT(IsRunning(), "Process is not currently running! Call 'CPUPerformance::Run()' to start process.");
 
@@ -135,7 +135,7 @@ namespace RESANA {
 		mDataBusy = true;
 		lc.NotifyAll();
 
-		return mProcessorData;
+		return mLogicalCoreData;
 	}
 
 	double CPUPerformance::GetAverageLoad() const
@@ -230,9 +230,9 @@ namespace RESANA {
 		}
 	}
 
-	ProcessorData* CPUPerformance::PrepareData() const
+	LogicalCoreData* CPUPerformance::PrepareData() const
 	{
-		auto data = new ProcessorData();
+		auto data = new LogicalCoreData();
 		bool success = true;
 		PdhItem* processorRef = nullptr;
 
@@ -289,7 +289,7 @@ namespace RESANA {
 		return data;
 	}
 
-	void CPUPerformance::PushData(ProcessorData* data)
+	void CPUPerformance::PushData(LogicalCoreData* data)
 	{
 		if (!data) { return; }
 
@@ -305,12 +305,12 @@ namespace RESANA {
 		lc.NotifyAll();
 	}
 
-	ProcessorData* CPUPerformance::ExtractData()
+	LogicalCoreData* CPUPerformance::ExtractData()
 	{
 		std::mutex mutex;
 		std::unique_lock<std::mutex>lock(mutex);
 		auto& lc = GetLockContainer();
-		ProcessorData* data = nullptr;
+		LogicalCoreData* data = nullptr;
 
 		while (mDataQueue.empty())
 		{
@@ -332,9 +332,9 @@ namespace RESANA {
 		return data;
 	}
 
-	void CPUPerformance::ProcessData(ProcessorData* data)
+	void CPUPerformance::ProcessData(LogicalCoreData* data)
 	{
-		if (!data || data->GetProcessorRef() == nullptr) { return; }
+		if (!data) { return; }
 
 		std::mutex mutex;
 		auto& lc = GetLockContainer();
@@ -367,7 +367,8 @@ namespace RESANA {
 			}
 			else {
 				// Add the processor
-				data->GetProcessors().push_back(std::make_shared<PdhItem>(*processor));
+				auto copy = new PdhItem(*processor);
+				data->GetProcessors().emplace_back(copy);
 			}
 		}
 	}
@@ -401,7 +402,7 @@ namespace RESANA {
 		mProcessLoad = percent * 100;
 	}
 
-	void CPUPerformance::SetData(ProcessorData* data)
+	void CPUPerformance::SetData(LogicalCoreData* data)
 	{
 		if (!sInstance || !data) { return; }
 
@@ -424,17 +425,17 @@ namespace RESANA {
 			std::lock_guard lock1(mutex, std::adopt_lock);
 			std::lock_guard lock2(lc.GetMutex(), std::adopt_lock);
 
-			mProcessorData.reset(data);
+			mLogicalCoreData.reset(data);
 		}
 		mDataReady = true;
 		lc.NotifyAll();
 	}
 
-	ProcessorData* CPUPerformance::SortAscending(ProcessorData* data)
+	LogicalCoreData* CPUPerformance::SortAscending(LogicalCoreData* data)
 	{
 		auto& processors = data->GetProcessors();
 		std::sort(processors.begin(), processors.end(),
-			[&](const std::shared_ptr<PdhItem>& left, const std::shared_ptr<PdhItem>& right) {
+			[&](const auto* left, const auto* right) {
 				return std::stoi(left->szName) < std::stoi(right->szName);
 			});
 

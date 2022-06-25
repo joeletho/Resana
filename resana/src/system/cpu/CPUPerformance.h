@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/base/ConcurrentProcess.h"
-#include "ProcessorData.h"
+#include "LogicalCoreData.h"
 
 #include "helpers/Time.h"
 
@@ -18,7 +18,7 @@ namespace RESANA {
 
 		static CPUPerformance* Get();
 
-		std::shared_ptr<ProcessorData> GetData();
+		std::shared_ptr<LogicalCoreData> GetData();
 
 		[[nodiscard]] int GetNumProcessors() const;
 		[[nodiscard]] double GetAverageLoad() const;
@@ -48,15 +48,15 @@ namespace RESANA {
 		void CalcProcessLoadThread();
 
 		// Called from threads
-		[[nodiscard]] ProcessorData* PrepareData() const;
-		ProcessorData* ExtractData();
+		[[nodiscard]] LogicalCoreData* PrepareData() const;
+		LogicalCoreData* ExtractData();
 		void CalcProcessLoad();
-		void SetData(ProcessorData* data);
-		void PushData(ProcessorData* data);
-		void ProcessData(ProcessorData* data);
+		void SetData(LogicalCoreData* data);
+		void PushData(LogicalCoreData* data);
+		void ProcessData(LogicalCoreData* data);
 
 		// Helpers
-		static ProcessorData* SortAscending(ProcessorData* data);
+		static LogicalCoreData* SortAscending(LogicalCoreData* data);
 
 	private:
 		const unsigned int MAX_LOAD_COUNT = 3;
@@ -66,8 +66,8 @@ namespace RESANA {
 		std::atomic<bool> mDataReady;
 		std::atomic<bool> mDataBusy;
 
-		std::shared_ptr<ProcessorData> mProcessorData{};
-		std::queue<ProcessorData*> mDataQueue{};
+		std::shared_ptr<LogicalCoreData> mLogicalCoreData{};
+		std::queue<LogicalCoreData*> mDataQueue{};
 		std::deque<double> mCPULoadValues{};
 
 		double mCPULoadAvg{};
