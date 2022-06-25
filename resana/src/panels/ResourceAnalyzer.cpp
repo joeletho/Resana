@@ -6,12 +6,12 @@
 
 namespace RESANA
 {
-	ResourceAnalyzer::ResourceAnalyzer() = default;
+	ResourceAnalyzer::ResourceAnalyzer()
+		: mUpdateInterval(TimeTick::Rate::Normal) {}
 
 	ResourceAnalyzer::~ResourceAnalyzer()
 	{
-		for (Panel* panel : mPanelStack)
-		{
+		for (Panel* panel : mPanelStack) {
 			panel->OnDetach();
 		}
 		mTimeTick.Stop();
@@ -47,23 +47,20 @@ namespace RESANA
 			{
 				if (i == 0)
 				{
-					mTickRate = Slow;
+					mUpdateInterval = TimeTick::Slow;
 					label = "Slow";
 				}
 				else if (i == 1)
 				{
-					mTickRate = Normal;
+					mUpdateInterval = TimeTick::Normal;
 					label = "Normal";
 				}
 				else if (i == 2)
 				{
-					mTickRate = Fast;
+					mUpdateInterval = TimeTick::Fast;
 					label = "Fast";
 				}
-				else
-				{
-					RS_CORE_ASSERT((i < 0 || i > 2), "Unknown update speed! {0}");
-				}
+
 				i = (i + 1) % 3;
 			}
 
@@ -74,7 +71,7 @@ namespace RESANA
 		}
 	}
 
-	void ResourceAnalyzer::UpdatePanels(RefreshRate rate)
+	void ResourceAnalyzer::UpdatePanels(Timestep rate)
 	{
 		if (const auto tick = mTimeTick.GetTickCount(); tick > mLastTick) {
 			for (Panel* panel : mPanelStack)
@@ -109,7 +106,7 @@ namespace RESANA
 	{
 		static int called_n = 0;
 		// Update the panels
-		UpdatePanels(mTickRate);
+		UpdatePanels((uint32_t)mUpdateInterval);
 	}
 
 	void ResourceAnalyzer::OnImGuiRender()

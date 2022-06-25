@@ -10,22 +10,21 @@ namespace RESANA
 	{
 		mMemoryInfo = MemoryPerformance::Get();
 		mCPUInfo = CPUPerformance::Get();
-	};
+	}
 
 	PerformancePanel::~PerformancePanel()
 	{
 		MemoryPerformance::Stop();
 		CPUPerformance::Stop();
-	};
+	}
 
 	void PerformancePanel::OnAttach()
 	{
+		mTickRate = TimeTick::Rate::Normal;
+
 		MemoryPerformance::Start();
 		CPUPerformance::Run();
 
-		mTickRate = 1000;
-		mMemoryInfo->SetUpdateSpeed(mTickRate);
-		mCPUInfo->SetUpdateSpeed(mTickRate);
 	}
 
 	void PerformancePanel::OnDetach()
@@ -38,7 +37,7 @@ namespace RESANA
 	{
 		mTickRate = ts;
 		mMemoryInfo->SetUpdateSpeed(mTickRate);
-		mCPUInfo->SetUpdateSpeed(mTickRate);
+		mCPUInfo->SetUpdateInterval(mTickRate);
 	}
 
 	void PerformancePanel::OnImGuiRender()

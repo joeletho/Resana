@@ -19,7 +19,7 @@ namespace RESANA
 
 		void ShowPanel(bool* pOpen) override;
 
-		void UpdatePanels(RefreshRate rate = Normal);
+		void UpdatePanels(Timestep rate = TimeTick::Rate::Normal);
 		void OnAttach() override;
 		void OnDetach() override;
 		void OnUpdate(Timestep ts = 0) override;
@@ -30,7 +30,7 @@ namespace RESANA
 		ProcessPanel* mProcPanel = nullptr;
 		LayerStack<Panel> mPanelStack{};
 
-		RefreshRate mTickRate = Normal;
+		uint32_t mUpdateInterval{};
 		Timestep mLastTick{};
 		TimeTick mTimeTick{};
 	};

@@ -23,7 +23,8 @@ namespace RESANA {
 	void ProcessPanel::OnAttach()
 	{
 		ProcessManager::Run();
-		mTickRate = 1000;
+
+		mTickRate = TimeTick::Rate::Normal;
 		mProcessManager->SetUpdateSpeed(mTickRate);
 	}
 
