@@ -6,12 +6,6 @@
 
 namespace RESANA {
 
-		enum RefreshRate {
-		Fast = 500,
-		Normal = 1000,
-		Slow = 2000
-	};
-
 	class Panel : public Layer {
 	public:
 		~Panel() override = default;
