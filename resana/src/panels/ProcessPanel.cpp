@@ -45,20 +45,18 @@ namespace RESANA {
 				{
 					if (const auto& data = mProcessManager->GetData())
 					{
-						// Make a deep copy
-						static std::mutex mutex;
-
-						// Be sure to let the original data know what entry is selected (if any) before
-						//	resetting mDataCache. If the new data has that entry, it will be selected from
-						//	within data and then reselected in mDataCache.
-						uint32_t backupId = -1;
-						if (const auto selected = mDataCache.GetSelectedEntry())
+						if (data->GetNumEntries() > 0)
 						{
-							backupId = selected->GetProcessId();
-						}
+							// Make a deep copy
+							uint32_t backupId = -1;
+							if (const auto selected = mDataCache.GetSelectedEntry())
+							{
+								backupId = selected->GetProcessId(); // Remember selected processId
+							}
 
-						mDataCache.Copy(data.get());
-						mDataCache.SelectEntry(backupId);
+							mDataCache.Copy(data.get());
+							mDataCache.SelectEntry(backupId); // Set selected process (if any)
+						}
 					}
 					mProcessManager->ReleaseData();
 				});
