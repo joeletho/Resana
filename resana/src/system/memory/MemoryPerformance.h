@@ -1,7 +1,5 @@
 #pragma once
 
-#include "perfdata\PerfManager.h"
-
 #include "helpers/Time.h"
 
 #include <Windows.h>
@@ -50,8 +48,6 @@ namespace RESANA
 		uint32_t mUpdateInterval{};
 
 		static MemoryPerformance* sInstance;
-
-		friend class PerfManager;
 	};
 
 } // RESANA

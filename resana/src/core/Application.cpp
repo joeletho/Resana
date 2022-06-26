@@ -5,7 +5,6 @@
 #include "Core.h"
 #include "Log.h"
 
-#include "perfdata/PerfManager.h"
 #include "system/ThreadPool.h"
 
 namespace RESANA {
@@ -21,7 +20,6 @@ namespace RESANA {
 		mWindow = std::unique_ptr<Window>(Window::Create());
 
 		// Start statics
-		PerfManager::Init();
 		Renderer::Init();
 
 		mThreadPool.reset(new ThreadPool);
