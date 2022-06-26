@@ -28,13 +28,16 @@ This program is a experiment and work-in-progress that allows me to learn more a
 ### Road map
 
 * UI
-  * Get Process Details table sortable by name
-  * Show total CPU load usage in table header (or something)
-  * Make logical processor table expandable upon clicking total usage header
-  * Rework update interval speed selection in Resource Analyzer
-* Process Information Panel
-  * Get process memory usage and module ID data working
-* In The Works
+  * Resource analyzer panel:
+    * Rework update interval speed selection
+    * Process panel:
+      * Get process memory usage and module ID data working
+      * Get processes sortable by name
+      * Get processes findable (i.e. searchable)
+    * Performance panel:
+      * Show total CPU load usage in table header (or something)
+      * Make logical processor table expandable upon clicking total usage header
+* Future updates:
   * Implement an event system. This is mainly do to the increasing demand of event notifications such as the consistent and sychronous updating of panels and panel objects.
 
 ---
