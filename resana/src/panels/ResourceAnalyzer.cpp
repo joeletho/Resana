@@ -11,74 +11,82 @@ namespace RESANA
 
 	ResourceAnalyzer::~ResourceAnalyzer()
 	{
-		for (Panel* panel : mPanelStack) {
-			panel->OnDetach();
-		}
-		mTimeTick.Stop();
-
 	}
 
 	void ResourceAnalyzer::ShowPanel(bool* pOpen)
 	{
-		static bool showThisPanel = true;
 		static bool showPerfPanel = false;
 		static bool showProcPanel = false;
 
 		// Create window and assign each panel to a tab
-		if (ImGui::Begin("Resource Analyzer", &showThisPanel))
+		if ((mPanelOpen = *pOpen))
 		{
-			if (ImGui::Button("Details", { 50.0f, 20.0f }))
+			if (ImGui::Begin("Resource Panel", pOpen))
 			{
-				showProcPanel = true;
-				showPerfPanel = false;
-			}
+				RS_CORE_ASSERT(pOpen, "Resource Panel should be open!")
 
-			ImGui::SameLine();
-			if (ImGui::Button("Performance", { 90.0f, 20.0f }))
-			{
-				showPerfPanel = true;
-				showProcPanel = false;
-			}
+					if (ImGui::Button("Process Details", { 110.0f, 20.0f }))
+					{
+						showProcPanel = true;
+						showPerfPanel = false;
+					}
 
-			ImGui::SameLine();
-			static std::string label = "Normal";
-			static int i = 1;
-			if (ImGui::Button(label.c_str(), { 90.0f, 20.0f }))
-			{
-				if (i == 0)
+				ImGui::SameLine();
+				if (ImGui::Button("Performance", { 90.0f, 20.0f }))
 				{
-					mUpdateInterval = TimeTick::Slow;
-					label = "Slow";
-				}
-				else if (i == 1)
-				{
-					mUpdateInterval = TimeTick::Normal;
-					label = "Normal";
-				}
-				else if (i == 2)
-				{
-					mUpdateInterval = TimeTick::Fast;
-					label = "Fast";
+					showPerfPanel = true;
+					showProcPanel = false;
 				}
 
-				i = (i + 1) % 3;
+				ImGui::SameLine();
+				static std::string label = "Normal";
+				static int i = 1;
+				if (ImGui::Button(label.c_str(), { 90.0f, 20.0f }))
+				{
+					if (i == 0)
+					{
+						mUpdateInterval = TimeTick::Slow;
+						label = "Slow";
+					}
+					else if (i == 1)
+					{
+						mUpdateInterval = TimeTick::Normal;
+						label = "Normal";
+					}
+					else if (i == 2)
+					{
+						mUpdateInterval = TimeTick::Fast;
+						label = "Fast";
+					}
+
+					i = (i + 1) % 3;
+				}
+
+				mProcPanel->ShowPanel(&showProcPanel);
+				mPerfPanel->ShowPanel(&showPerfPanel);
 			}
-
-			mProcPanel->ShowPanel(&showProcPanel);
-			mPerfPanel->ShowPanel(&showPerfPanel);
-
 			ImGui::End();
 		}
+		else
+		{
+			showPerfPanel = false;
+			showProcPanel = false;
+			this->OnDetach();
+		}
 	}
-
-	void ResourceAnalyzer::UpdatePanels(Timestep rate)
+	void ResourceAnalyzer::UpdatePanels(Timestep interval)
 	{
-		if (const auto tick = mTimeTick.GetTickCount(); tick > mLastTick) {
-			for (Panel* panel : mPanelStack)
-			{
-				panel->OnUpdate(rate);
+		if (mPanelOpen)
+		{
+			if (const auto tick = mTimeTick.GetTickCount(); tick > mLastTick) {
+				for (Panel* panel : mPanelStack)
+				{
+					if (panel->IsPanelOpen()) {
+						panel->OnUpdate(interval);
+					}
+				}
+				mLastTick = tick;
 			}
-			mLastTick = tick;
 		}
 	}
 
@@ -104,9 +112,11 @@ namespace RESANA
 
 	void ResourceAnalyzer::OnUpdate(Timestep ts)
 	{
-		static int called_n = 0;
-		// Update the panels
-		UpdatePanels((uint32_t)mUpdateInterval);
+		if (mPanelOpen)
+		{
+			// Update the panels
+			UpdatePanels(mUpdateInterval);
+		}
 	}
 
 	void ResourceAnalyzer::OnImGuiRender()
@@ -114,4 +124,8 @@ namespace RESANA
 
 	}
 
+	void ResourceAnalyzer::CloseChildren()
+	{
+		OnDetach();
+	}
 }

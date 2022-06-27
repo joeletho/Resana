@@ -8,36 +8,36 @@ namespace RESANA
 
 	PerformancePanel::PerformancePanel()
 	{
-		mMemoryInfo = MemoryPerformance::Get();
-		mCPUInfo = CPUPerformance::Get();
 	}
 
 	PerformancePanel::~PerformancePanel()
 	{
-		MemoryPerformance::Stop();
-		CPUPerformance::Stop();
 	}
 
 	void PerformancePanel::OnAttach()
 	{
-		mTickRate = TimeTick::Rate::Normal;
-
-		MemoryPerformance::Start();
-		CPUPerformance::Run();
-
+		mUpdateInterval = TimeTick::Rate::Normal;
+		mPanelOpen = false;
+		InitMemoryPanel();
+		InitCpuPanel();
 	}
 
 	void PerformancePanel::OnDetach()
 	{
-		MemoryPerformance::Stop();
-		CPUPerformance::Stop();
+		MemoryPerformance::Shutdown();
+		mMemoryInfo = nullptr;
+		CPUPerformance::Shutdown();
+		mCPUInfo = nullptr;
 	}
 
 	void PerformancePanel::OnUpdate(Timestep ts)
 	{
-		mTickRate = ts;
-		mMemoryInfo->SetUpdateSpeed(mTickRate);
-		mCPUInfo->SetUpdateInterval(mTickRate);
+		if (mPanelOpen)
+		{
+			mUpdateInterval = (uint32_t)ts;
+			UpdateMemoryPanel();
+			UpdateCpuPanel();
+		}
 	}
 
 	void PerformancePanel::OnImGuiRender()
@@ -46,11 +46,12 @@ namespace RESANA
 
 	void PerformancePanel::ShowPanel(bool* pOpen)
 	{
-		if (*pOpen)
+		if ((mPanelOpen = *pOpen))
 		{
-			if (ImGui::BeginChild("Performance", ImGui::GetContentRegionAvail())) {
-				MemoryPerformance::Start();
-				CPUPerformance::Run();
+			if (ImGui::BeginChild("Performance", ImGui::GetContentRegionAvail())) \
+			{
+				UpdateMemoryPanel();
+				UpdateCpuPanel();
 
 				ShowCPUTable();
 				ImGui::TextUnformatted("Memory");
@@ -62,8 +63,13 @@ namespace RESANA
 		}
 		else
 		{
-
+			ClosePanels();
 		}
+	}
+
+	void PerformancePanel::SetUpdateInterval(Timestep interval)
+	{
+		mUpdateInterval = (uint32_t)interval;
 	}
 
 	void PerformancePanel::ShowPhysicalMemoryTable() const
@@ -157,6 +163,42 @@ namespace RESANA
 		}
 
 		ImGui::EndTable();
+	}
+
+	void PerformancePanel::InitCpuPanel() const
+	{
+		mCPUInfo = CPUPerformance::Get();
+		mCPUInfo->SetUpdateInterval(mUpdateInterval);
+	}
+
+	void PerformancePanel::UpdateCpuPanel() const
+	{
+		if (!mCPUInfo)
+			InitCpuPanel();
+
+		CPUPerformance::Run();
+		mCPUInfo->SetUpdateInterval(mUpdateInterval);
+	}
+
+	void PerformancePanel::InitMemoryPanel() const
+	{
+		mMemoryInfo = MemoryPerformance::Get();
+		mMemoryInfo->SetUpdateInterval(mUpdateInterval);
+	}
+
+	void PerformancePanel::UpdateMemoryPanel() const
+	{
+		if (!mMemoryInfo)
+			InitMemoryPanel();
+
+		MemoryPerformance::Run();
+		mMemoryInfo->SetUpdateInterval(mUpdateInterval);
+	}
+
+	void PerformancePanel::ClosePanels()
+	{
+		MemoryPerformance::Stop();
+		CPUPerformance::Stop();
 	}
 
 } // RESANA

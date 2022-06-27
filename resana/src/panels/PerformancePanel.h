@@ -19,16 +19,27 @@ namespace RESANA
 		void OnUpdate(Timestep ts) override;
 		void OnImGuiRender() override;
 		void ShowPanel(bool* pOpen) override;
+		void SetUpdateInterval(Timestep interval) override;
 
+		bool IsPanelOpen() const override { return mPanelOpen; };
+		
 	private:
 		void ShowPhysicalMemoryTable() const;
 		void ShowVirtualMemoryTable() const;
 		void ShowCPUTable();
-	private:
-		MemoryPerformance* mMemoryInfo = nullptr;
-		CPUPerformance* mCPUInfo = nullptr;
+		void InitCpuPanel() const;
+		void UpdateCpuPanel() const;
+		void InitMemoryPanel() const;
+		void UpdateMemoryPanel() const;
 
-		Timestep mTickRate{};
+		static void ClosePanels();
+
+	private:
+		mutable MemoryPerformance* mMemoryInfo = nullptr;
+		mutable CPUPerformance* mCPUInfo = nullptr;
+		bool mPanelOpen = false;
+
+		uint32_t mUpdateInterval{};
 	};
 
 } // RESANA

@@ -12,34 +12,35 @@ namespace RESANA {
 
 	ProcessPanel::ProcessPanel()
 	{
-		mProcessManager = ProcessManager::Get();
 	}
 
 	ProcessPanel::~ProcessPanel()
 	{
-		ProcessManager::Stop();
 	}
 
 	void ProcessPanel::OnAttach()
 	{
-		ProcessManager::Run();
+		mUpdateInterval = TimeTick::Rate::Normal;
+		mPanelOpen = false;
 
-		mTickRate = TimeTick::Rate::Normal;
-		mProcessManager->SetUpdateSpeed(mTickRate);
+		mProcessManager = ProcessManager::Get();
+		mProcessManager->SetUpdateInterval(mUpdateInterval);
 	}
 
 	void ProcessPanel::OnDetach()
 	{
-		ProcessManager::Stop();
+		ProcessManager::Shutdown();
 	}
 
 	void ProcessPanel::OnUpdate(Timestep ts)
 	{
-		mTickRate = ts;
-		mProcessManager->SetUpdateSpeed(mTickRate);
+		mUpdateInterval = ts;
 
 		if (IsPanelOpen())
 		{
+			ProcessManager::Run();
+			mProcessManager->SetUpdateInterval(mUpdateInterval);
+
 			auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 			threadPool.Queue([&]
@@ -58,8 +59,8 @@ namespace RESANA {
 							mDataCache.Copy(data.get());
 							mDataCache.SelectEntry(backupId); // Set selected process (if any)
 						}
+						mProcessManager->ReleaseData();
 					}
-					mProcessManager->ReleaseData();
 				});
 		}
 	}
@@ -80,14 +81,13 @@ namespace RESANA {
 
 		}
 		else {
-			//ProcessManager::Stop();
-
+			ProcessManager::Stop();
 		}
 	}
 
-	void ProcessPanel::SetTickRate(Timestep tickRate)
+	void ProcessPanel::SetUpdateInterval(Timestep interval)
 	{
-		mTickRate = tickRate;
+		mUpdateInterval = interval;
 	}
 
 	void ProcessPanel::ShowProcessTable()

@@ -19,16 +19,21 @@ namespace RESANA
 
 		void ShowPanel(bool* pOpen) override;
 
-		void UpdatePanels(Timestep rate = TimeTick::Rate::Normal);
+		void UpdatePanels(Timestep interval = TimeTick::Rate::Normal);
 		void OnAttach() override;
 		void OnDetach() override;
 		void OnUpdate(Timestep ts = 0) override;
 		void OnImGuiRender() override;
 
+		bool IsPanelOpen() const override { return mPanelOpen; };
+		
 	private:
+		void CloseChildren();
+
 		PerformancePanel* mPerfPanel = nullptr;
 		ProcessPanel* mProcPanel = nullptr;
 		LayerStack<Panel> mPanelStack{};
+		bool mPanelOpen{};
 
 		uint32_t mUpdateInterval{};
 		Timestep mLastTick{};

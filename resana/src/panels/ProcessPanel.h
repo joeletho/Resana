@@ -19,17 +19,17 @@ namespace RESANA {
 		void OnImGuiRender() override;
 
 		void ShowPanel(bool* pOpen) override;
-		void SetTickRate(Timestep tickRate) override;
+		void SetUpdateInterval(Timestep interval) override;
 
-		bool IsPanelOpen() const { return mPanelOpen; };
+		bool IsPanelOpen() const override { return mPanelOpen; };
 
 	private:
 		void ShowProcessTable();
 	private:
 		ProcessManager* mProcessManager = nullptr;
 		ProcessContainer mDataCache{};
-		Timestep mTickRate{};
 		bool mPanelOpen = false;
+		uint32_t mUpdateInterval{};
 	};
 
 } // RESANA
