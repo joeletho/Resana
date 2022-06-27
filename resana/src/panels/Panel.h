@@ -14,7 +14,9 @@ namespace RESANA {
 		void OnUpdate(Timestep ts) override = 0;
 		void OnImGuiRender() override = 0;
 		virtual void ShowPanel(bool* pOpen) = 0;
-		virtual void SetTickRate(Timestep tickRate) {};
+		virtual bool IsPanelOpen() const = 0;
+
+		virtual void SetUpdateInterval(Timestep interval = TimeTick::Rate::Normal) {};
 	};
 
 }
