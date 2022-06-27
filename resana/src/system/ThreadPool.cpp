@@ -30,8 +30,6 @@ namespace RESANA
 		}
 		mCondition.notify_all();
 
-		//Time::Sleep(1000);
-
 		for (std::thread& active_thread : mThreads) {
 			active_thread.join();
 		}
