@@ -43,9 +43,9 @@ namespace RESANA
 		void Destroy() const;
 
 	private:
-		MEMORYSTATUSEX mMemoryInfo;
-		PROCESS_MEMORY_COUNTERS_EX mPMC;
-		uint32_t mUpdateInterval;
+		MEMORYSTATUSEX mMemoryInfo{};
+		PROCESS_MEMORY_COUNTERS_EX mPMC{};
+		uint32_t mUpdateInterval{};
 		bool mRunning = false;
 
 		static MemoryPerformance* sInstance;

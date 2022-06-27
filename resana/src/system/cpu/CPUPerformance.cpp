@@ -102,6 +102,7 @@ namespace RESANA {
 			const auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 			threadPool.Queue([&] {sInstance->Destroy(); });
+			sInstance = nullptr;
 		}
 	}
 
