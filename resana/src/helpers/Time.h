@@ -21,10 +21,11 @@ namespace RESANA {
 		static std::string GetTimeFormatted();
 
 		template<typename N>
-		static void Sleep(N sleepTime_ms)
+		static bool Sleep(N sleepTime_ms)
 		{
 			std::this_thread::sleep_for(std::chrono
 				::milliseconds((int)sleepTime_ms));
+			return true;
 		}
 
 	private:
