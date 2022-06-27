@@ -15,6 +15,7 @@ namespace RESANA {
 	public:
 		static void Run();
 		static void Stop();
+		static void Shutdown();
 
 		static CPUPerformance* Get();
 
@@ -27,7 +28,7 @@ namespace RESANA {
 
 		// Must be called after GetData() to unlock mutex
 		void ReleaseData();
-		void SetUpdateInterval(Timestep ts = 1000);
+		void SetUpdateInterval(Timestep interval);
 
 		bool IsRunning() const;
 
@@ -40,7 +41,7 @@ namespace RESANA {
 		void InitProcessData();
 
 		// Calls destructor on new thread
-		void Terminate();
+		void Destroy() const;
 
 		// Threads
 		void PrepareDataThread();

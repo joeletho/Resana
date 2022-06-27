@@ -24,9 +24,7 @@ namespace RESANA {
 
 	CPUPerformance::~CPUPerformance()
 	{
-		sInstance = nullptr; // reset static instance before destructing
-
-		Time::Sleep(mUpdateInterval); // Let detached threads finish before destructing
+		Time::Sleep(mUpdateInterval); // Let threads finish before destructing
 
 		std::mutex mutex;
 		std::unique_lock<std::mutex> lock(mutex);
@@ -93,15 +91,24 @@ namespace RESANA {
 			sInstance->mRunning = false;
 			auto& lc = sInstance->GetLockContainer();
 			lc.NotifyAll();
-			auto& app = Application::Get();
-			auto& threadPool = app.GetThreadPool();
-			threadPool.Queue([&] {sInstance->Terminate(); });
 		}
 	}
 
-	void CPUPerformance::Terminate()
+	void CPUPerformance::Shutdown()
 	{
-		this->~CPUPerformance();
+		if (sInstance)
+		{
+			Stop();
+			const auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+			threadPool.Queue([&] {sInstance->Destroy(); });
+		}
+	}
+
+	void CPUPerformance::Destroy() const
+	{
+		sInstance = nullptr;
+		delete this;
 	}
 
 	CPUPerformance* CPUPerformance::Get()
@@ -201,10 +208,9 @@ namespace RESANA {
 		lc.NotifyAll();
 	}
 
-	void CPUPerformance::SetUpdateInterval(Timestep ts)
+	void CPUPerformance::SetUpdateInterval(Timestep interval)
 	{
-		RS_CORE_ASSERT(IsRunning(), "CPUPerformance not running! Did you forget to call 'Run()'?");
-		mUpdateInterval = ts;
+		mUpdateInterval = interval;
 	}
 
 	bool CPUPerformance::IsRunning() const

@@ -23,8 +23,6 @@ namespace RESANA {
 
 	ProcessManager::~ProcessManager()
 	{
-		sInstance = nullptr; // reset static instance before destructing
-
 		Time::Sleep(mUpdateInterval); // Let detached threads finish before 
 
 		std::mutex mutex;
@@ -34,13 +32,10 @@ namespace RESANA {
 		while (mDataBusy) { lc.Wait(lock); }
 	}
 
-	void ProcessManager::Terminate()
+	void ProcessManager::Destroy() const
 	{
-		mRunning = false;
-		auto& lc = GetLockContainer();
-		lc.NotifyAll();
-
-		this->~ProcessManager();
+		sInstance = nullptr;
+		delete this;
 	}
 
 	ProcessManager* ProcessManager::Get()
@@ -65,15 +60,15 @@ namespace RESANA {
 
 	void ProcessManager::ReleaseData()
 	{
+		RS_CORE_ASSERT(mDataBusy, "Data is not owned! Did you forget to call 'GetData()'?");
 		mDataBusy = false;
 		auto& lc = GetLockContainer();
 		lc.NotifyAll();
 	}
 
-	void ProcessManager::SetUpdateSpeed(Timestep ts)
+	void ProcessManager::SetUpdateInterval(Timestep interval)
 	{
-		RS_CORE_ASSERT(IsRunning(), "ProcessManager not running! Did you forget to call 'Run()'?")
-		mUpdateInterval = ts;
+		mUpdateInterval = interval;
 	}
 
 	uint32_t ProcessManager::GetUpdateSpeed() const
@@ -115,10 +110,18 @@ namespace RESANA {
 			sInstance->mRunning = false;
 			auto& lc = sInstance->GetLockContainer();
 			lc.NotifyAll();
+		}
+	}
+
+	void ProcessManager::Shutdown()
+	{
+		if (sInstance)
+		{
+			Stop();
 
 			auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
-			threadPool.Queue([&]() { sInstance->Terminate(); });
+			threadPool.Queue([&]() { sInstance->Destroy(); });
 		}
 	}
 
@@ -173,7 +176,10 @@ namespace RESANA {
 			});
 
 		while (!snapshotReady) {
-			if (error || !IsRunning()) { return false; } Time::Sleep(50);
+			Time::Sleep(1);
+			if (error || !IsRunning()) {
+				return false;
+			};
 		}
 
 		threadPool.Queue([&] {
@@ -193,7 +199,10 @@ namespace RESANA {
 		// get information about each process in turn
 
 		while (!processDone) {
-			if (error || !IsRunning()) { return false; } Time::Sleep(50);
+			Time::Sleep(1);
+			if (error || !IsRunning()) {
+				return false;
+			};
 		}
 
 		threadPool.Queue([&, this] {
@@ -225,7 +234,13 @@ namespace RESANA {
 			CloseHandle(hProcessSnap);
 			});
 
-		while (!walkingDone || !IsRunning()) { Time::Sleep(10); }
+		while (!walkingDone) {
+			Time::Sleep(1);
+			if (error || !IsRunning()) {
+				return false;
+			};
+		}
+
 		// Remove any processes not currently running
 		CleanMap();
 

@@ -17,6 +17,7 @@ namespace RESANA {
 
 		static void Run();
 		static void Stop();
+		static void Shutdown();
 
 		[[nodiscard]] int GetNumProcesses() const;
 
@@ -24,7 +25,7 @@ namespace RESANA {
 
 		void ReleaseData();
 
-		void SetUpdateSpeed(Timestep ts = 1000);
+		void SetUpdateInterval(Timestep interval = TimeTick::Rate::Normal);
 		uint32_t GetUpdateSpeed() const;
 
 		bool IsRunning() const;
@@ -33,7 +34,7 @@ namespace RESANA {
 		ProcessManager();
 		~ProcessManager() override;
 
-		void Terminate();
+		void Destroy() const;
 
 		void PrepareDataThread();
 		void ProcessDataThread();
