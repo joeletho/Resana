@@ -64,7 +64,7 @@ namespace RESANA
 			std::function<void()> job;
 			{
 				std::unique_lock<std::mutex> lock(mMutex);
-				mCondition.wait(lock, [this] {
+				mCondition.wait(lock, [&,this] {
 					return !mQueue.empty() || mShouldTerminate;
 					});
 
