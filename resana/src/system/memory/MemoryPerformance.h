@@ -15,8 +15,9 @@ namespace RESANA
 	public:
 		static MemoryPerformance* Get();
 
-		static void Start();
+		static void Run();
 		static void Stop();
+		static void Shutdown();
 
 		/* Physical Memory */
 		[[nodiscard]] DWORDLONG GetTotalPhys() const;
@@ -32,20 +33,20 @@ namespace RESANA
 
 		[[nodiscard]] bool IsRunning() const { return mRunning; }
 
-		void SetUpdateSpeed(Timestep ts = 1000);
-
+		void SetUpdateInterval(Timestep interval = TimeTick::Rate::Normal);
 
 	private:
 		MemoryPerformance();
 		~MemoryPerformance();
 		void UpdateMemoryInfo();
 		void UpdatePMC();
+		void Destroy() const;
 
 	private:
-		MEMORYSTATUSEX mMemoryInfo{};
-		PROCESS_MEMORY_COUNTERS_EX mPMC{};
+		MEMORYSTATUSEX mMemoryInfo;
+		PROCESS_MEMORY_COUNTERS_EX mPMC;
+		uint32_t mUpdateInterval;
 		bool mRunning = false;
-		uint32_t mUpdateInterval{};
 
 		static MemoryPerformance* sInstance;
 	};

@@ -9,38 +9,34 @@ namespace RESANA {
 	MemoryPerformance* MemoryPerformance::sInstance = nullptr;
 
 	MemoryPerformance::MemoryPerformance()
-		: mUpdateInterval(TimeTick::Rate::Normal)
+		: mPMC(), mUpdateInterval(TimeTick::Rate::Normal)
 	{
-		mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	}
 
 	MemoryPerformance::~MemoryPerformance()
 	{
-		sInstance = nullptr;
-
+		// Wait for loops to stop
 		Time::Sleep(mUpdateInterval);
 	}
 
 	MemoryPerformance* MemoryPerformance::Get()
 	{
-		if (!sInstance)
-		{
+		if (!sInstance) {
 			sInstance = new MemoryPerformance();
 		}
 
 		return sInstance;
 	}
 
-	void MemoryPerformance::Start()
+	void MemoryPerformance::Run()
 	{
 		if (!sInstance) { MemoryPerformance::Get(); }
 
 		if (!sInstance->IsRunning())
 		{
 			sInstance->mRunning = true;
-			sInstance->mUpdateInterval = TimeTick::Rate::Normal;
 
-			auto& app = Application::Get();
+			const auto& app = Application::Get();
 			auto& threadPool = app.GetThreadPool();
 
 			threadPool.Queue([&] { sInstance->UpdateMemoryInfo(); });
@@ -50,15 +46,19 @@ namespace RESANA {
 
 	void MemoryPerformance::Stop()
 	{
-		if (sInstance) {
-			if (sInstance->mRunning)
-			{
-				sInstance->mRunning = false;
+		if (sInstance && sInstance->IsRunning()) {
+			sInstance->mRunning = false;
+		}
+	}
 
-				auto& app = Application::Get();
-				auto& threadPool = app.GetThreadPool();
-				threadPool.Queue([&] { sInstance->~MemoryPerformance(); });
-			}
+	void MemoryPerformance::Shutdown()
+	{
+		if (sInstance)
+		{
+			Stop();
+			auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+			threadPool.Queue([&] { sInstance->Destroy(); });
 		}
 	}
 
@@ -102,31 +102,43 @@ namespace RESANA {
 		return mPMC.PrivateUsage;
 	}
 
-	void MemoryPerformance::SetUpdateSpeed(Timestep ts)
+	void MemoryPerformance::SetUpdateInterval(Timestep interval)
 	{
-		RS_CORE_ASSERT(IsRunning(), "MemoryPerformance not running! Did you forget to call 'Run()'?")
-		mUpdateInterval = ts;
+		mUpdateInterval = (uint32_t)interval;
 	}
 
 	void MemoryPerformance::UpdateMemoryInfo()
 	{
-		while (mRunning)
+		MEMORYSTATUSEX memInfo{};
+		mMemoryInfo = memInfo;
+		mMemoryInfo.dwLength = sizeof(MEMORYSTATUSEX);
+
+		do
 		{
 			GlobalMemoryStatusEx(&mMemoryInfo);
-
-			Sleep((uint32_t)mUpdateInterval);
-		}
+		} while (IsRunning() && Time::Sleep(mUpdateInterval));
+		ZeroMemory(&mMemoryInfo, sizeof(MEMORYSTATUSEX));
 	}
 
 	void MemoryPerformance::UpdatePMC()
 	{
-		while (mRunning)
-		{
-			GetProcessMemoryInfo(GetCurrentProcess(),
-				(PROCESS_MEMORY_COUNTERS*)&mPMC, sizeof(mPMC));
+		PROCESS_MEMORY_COUNTERS_EX pmc{};
+		mPMC = pmc;
 
-			Sleep((uint32_t)mUpdateInterval);
-		}
+		const auto hProcess = GetCurrentProcess();
+		do
+		{
+			ZeroMemory(&mPMC, sizeof(PROCESS_MEMORY_COUNTERS_EX));
+			GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&mPMC, sizeof(mPMC));
+		} while (IsRunning() && Time::Sleep(mUpdateInterval));
+
+		CloseHandle(hProcess);
+		ZeroMemory(&mPMC, sizeof(PROCESS_MEMORY_COUNTERS_EX));
 	}
 
+	void MemoryPerformance::Destroy() const
+	{
+		sInstance = nullptr;
+		delete this;
+	}
 }
