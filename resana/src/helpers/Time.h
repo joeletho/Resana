@@ -75,6 +75,7 @@ namespace RESANA {
 
 		TimeTick();
 		~TimeTick();
+		void Start();
 		void Stop();
 
 		Timestep GetTickCount() const { return mTick; }

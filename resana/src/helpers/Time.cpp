@@ -50,12 +50,7 @@ namespace RESANA {
 
 	TimeTick::TimeTick()
 	{
-		const auto& app = Application::Get();
-		auto& threadPool = app.GetThreadPool();
-
-		threadPool.Queue([&] { CountTicks(); });
-
-		mRunning = true;
+		Start();
 	}
 
 	TimeTick::~TimeTick()
@@ -66,6 +61,17 @@ namespace RESANA {
 	void TimeTick::Stop()
 	{
 		mRunning = false;
+	}
+
+	void TimeTick::Start()
+	{
+		if (!mRunning)
+		{
+			mRunning = true;
+			const auto& app = Application::Get();
+			auto& threadPool = app.GetThreadPool();
+			threadPool.Queue([&] { CountTicks(); });
+		}
 	}
 
 	void TimeTick::CountTicks()
