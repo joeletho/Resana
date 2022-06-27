@@ -24,6 +24,7 @@ namespace RESANA
 
 	void PerformancePanel::OnDetach()
 	{
+		mPanelOpen = false;
 		MemoryPerformance::Shutdown();
 		mMemoryInfo = nullptr;
 		CPUPerformance::Shutdown();

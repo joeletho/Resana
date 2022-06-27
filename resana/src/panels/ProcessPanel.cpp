@@ -29,6 +29,7 @@ namespace RESANA {
 
 	void ProcessPanel::OnDetach()
 	{
+		mPanelOpen = false;
 		ProcessManager::Shutdown();
 	}
 
