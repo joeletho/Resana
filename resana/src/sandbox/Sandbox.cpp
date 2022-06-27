@@ -15,33 +15,33 @@ namespace RESANA {
 
 	ExampleLayer::~ExampleLayer()
 	{
-		delete mResanaPanel;
+		ExampleLayer::OnDetach();
 	};
 
 	void ExampleLayer::OnAttach()
 	{
 		mResanaPanel = new ResourceAnalyzer();
 		mResanaPanel->OnAttach();
-		//mPerformancePanel = new PerformancePanel();
-		//mProcessPanel = new ProcessPanel();
 	}
 
 	void ExampleLayer::OnDetach()
 	{
-		mResanaPanel->OnDetach();
+		if (mResanaPanel) {
+			mShowResanaPanel = false;
+			mResanaPanel->OnDetach();
+		}
 	}
 
 	void ExampleLayer::OnUpdate(Timestep ts)
 	{
-		mResanaPanel->OnUpdate(ts);
+		if (mShowResanaPanel) {
+			mResanaPanel->OnUpdate(ts);
+		}
 	}
 
 	void ExampleLayer::OnImGuiRender()
 	{
 		static bool showDemo = false;
-		static bool showResanaPanel = true;
-		static bool showResourcePanel = false;
-		static bool showProcessPanel = false;
 
 		if (ImGui::BeginMainMenuBar())
 		{
@@ -55,9 +55,7 @@ namespace RESANA {
 
 			if (ImGui::BeginMenu("View"))
 			{
-				//ImGui::MenuItem("Resource Manager", nullptr, &showResourcePanel);
-				//ImGui::MenuItem("Process", nullptr, &showProcessPanel);
-				ImGui::MenuItem("Resource Analyzer", nullptr, &showResanaPanel);
+				ImGui::MenuItem("Resource Analyzer", nullptr, &mShowResanaPanel);
 				ImGui::MenuItem("ImGui Demo", nullptr, &showDemo);
 				ImGui::EndMenu();
 			}
@@ -68,14 +66,21 @@ namespace RESANA {
 			ImGui::ShowDemoWindow(&showDemo);
 		}
 
-		mResanaPanel->ShowPanel(&showResanaPanel);
-		//mPerformancePanel->ShowPanel(&showResourcePanel);
-		//mProcessPanel->ShowPanel(&showProcessPanel);
+		ShowResanaPanel();
 
-		/* DEBUG ONLY */
-		
+	}
 
-
+	void ExampleLayer::ShowResanaPanel()
+	{
+		if (!mResanaPanel && mShowResanaPanel) {
+			ExampleLayer::OnAttach();
+		}
+		else if (mResanaPanel) {
+			mResanaPanel->ShowPanel(&mShowResanaPanel);
+			if (!mShowResanaPanel) {
+				mResanaPanel = nullptr; // Panel was just closed and destroyed
+			}
+		}
 	}
 
 	class Sandbox final : public Application {

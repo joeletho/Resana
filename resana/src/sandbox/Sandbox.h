@@ -2,9 +2,6 @@
 
 #include "core/Layer.h"
 
-#include "panels/PerformancePanel.h"
-#include "panels/ProcessPanel.h"
-
 #include "helpers/Time.h"
 #include "panels/ResourceAnalyzer.h"
 
@@ -22,10 +19,11 @@ namespace RESANA
 		void OnUpdate(Timestep ts) override;
 		void OnImGuiRender() override;
 
+		void ShowResanaPanel();
+
 	private:
 		ResourceAnalyzer* mResanaPanel = nullptr;
-		//ProcessPanel* mProcessPanel = nullptr;
-		//PerformancePanel* mPerformancePanel = nullptr;
+		bool mShowResanaPanel = false;
 	};
 
 }
