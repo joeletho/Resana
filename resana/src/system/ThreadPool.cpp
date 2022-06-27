@@ -1,6 +1,5 @@
 #include "ThreadPool.h"
 
-#include "helpers/Time.h"
 
 namespace RESANA
 {
