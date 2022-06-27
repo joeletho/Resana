@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 
+#include "core/Application.h"
 #include "core/Core.h"
 
 namespace RESANA
@@ -11,13 +12,11 @@ namespace RESANA
 
 	ResourceAnalyzer::~ResourceAnalyzer()
 	{
+		CloseChildren();
 	}
 
 	void ResourceAnalyzer::ShowPanel(bool* pOpen)
 	{
-		static bool showPerfPanel = false;
-		static bool showProcPanel = false;
-
 		// Create window and assign each panel to a tab
 		if ((mPanelOpen = *pOpen))
 		{
@@ -27,15 +26,15 @@ namespace RESANA
 
 					if (ImGui::Button("Process Details", { 110.0f, 20.0f }))
 					{
-						showProcPanel = true;
-						showPerfPanel = false;
+						mShowProcPanel = true;
+						mShowPerfPanel = false;
 					}
 
 				ImGui::SameLine();
 				if (ImGui::Button("Performance", { 90.0f, 20.0f }))
 				{
-					showPerfPanel = true;
-					showProcPanel = false;
+					mShowPerfPanel = true;
+					mShowProcPanel = false;
 				}
 
 				ImGui::SameLine();
@@ -62,16 +61,13 @@ namespace RESANA
 					i = (i + 1) % 3;
 				}
 
-				mProcPanel->ShowPanel(&showProcPanel);
-				mPerfPanel->ShowPanel(&showPerfPanel);
+				mProcPanel->ShowPanel(&mShowProcPanel);
+				mPerfPanel->ShowPanel(&mShowPerfPanel);
 			}
 			ImGui::End();
 		}
-		else
-		{
-			showPerfPanel = false;
-			showProcPanel = false;
-			this->OnDetach();
+		else {
+			Close();
 		}
 	}
 	void ResourceAnalyzer::UpdatePanels(Timestep interval)
@@ -99,15 +95,18 @@ namespace RESANA
 		mProcPanel = new ProcessPanel();
 		mProcPanel->OnAttach();
 		mPanelStack.PushLayer(mProcPanel);
+
+		mTimeTick.Start();
 	}
 
 	void ResourceAnalyzer::OnDetach()
 	{
-		for (Panel* panel : mPanelStack)
-		{
+		mPanelOpen = false;
+		mTimeTick.Stop();
+
+		for (Panel* panel : mPanelStack) {
 			panel->OnDetach();
 		}
-		mTimeTick.Stop();
 	}
 
 	void ResourceAnalyzer::OnUpdate(Timestep ts)
@@ -124,8 +123,15 @@ namespace RESANA
 
 	}
 
+	void ResourceAnalyzer::Close()
+	{
+		const auto& app = Application::Get();
+		auto& threadPool = app.GetThreadPool();
+		threadPool.Queue([&, this] { delete this; });
+	}
+
 	void ResourceAnalyzer::CloseChildren()
 	{
-		OnDetach();
+		ResourceAnalyzer::OnDetach();
 	}
 }

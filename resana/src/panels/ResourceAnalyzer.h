@@ -28,12 +28,16 @@ namespace RESANA
 		bool IsPanelOpen() const override { return mPanelOpen; };
 		
 	private:
+		void Close();
 		void CloseChildren();
 
-		PerformancePanel* mPerfPanel = nullptr;
 		ProcessPanel* mProcPanel = nullptr;
+		PerformancePanel* mPerfPanel = nullptr;
 		LayerStack<Panel> mPanelStack{};
+
 		bool mPanelOpen{};
+		bool mShowProcPanel = false;
+		bool mShowPerfPanel = false;
 
 		uint32_t mUpdateInterval{};
 		Timestep mLastTick{};
