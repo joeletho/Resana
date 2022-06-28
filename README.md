@@ -46,4 +46,4 @@ This program is a experiment and work-in-progress that allows me to learn more a
   * Fix 'View' menu in Process Details to stop it from taking context when hovered
   * ~~Closing Resource Analyzer panel crashes program~~
   * Program exits after waiting for ending threads to join. This can take a few seconds and can be improved with an event system _(coming in the future)_
-  * Processes are not deselected when clicking a selected process.
+  * ~~Processes are not deselected when clicking a selected process.~~
