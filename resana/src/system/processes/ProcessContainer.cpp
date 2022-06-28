@@ -1,126 +1,131 @@
-#include "rspch.h"
 #include "ProcessContainer.h"
+#include "rspch.h"
 
 #include "ProcessEntry.h"
 
-namespace RESANA
+namespace RESANA {
+
+ProcessContainer::ProcessContainer() = default;
+
+ProcessContainer::ProcessContainer(const ProcessContainer* other)
+    : mEntries(other->mEntries)
+    , mSelectedEntry(other->GetSelectedEntry())
 {
+}
 
-	ProcessContainer::ProcessContainer() = default;
+ProcessContainer::~ProcessContainer()
+{
+    Clear(mMutex);
+};
 
-	ProcessContainer::ProcessContainer(const ProcessContainer* other)
-		:mEntries(other->mEntries), mSelectedEntry(other->GetSelectedEntry()) {}
+int ProcessContainer::GetNumEntries() const
+{
+    return (int)mEntries.size();
+}
 
+std::mutex& ProcessContainer::GetMutex()
+{
+    return mMutex;
+}
 
-	ProcessContainer::~ProcessContainer()
-	{
-		Clear(mMutex);
-	};
+std::vector<ProcessEntry*>& ProcessContainer::GetEntries()
+{
+    return mEntries;
+}
 
-	int ProcessContainer::GetNumEntries() const
-	{
-		return (int)mEntries.size();
-	}
+ProcessEntry* ProcessContainer::GetSelectedEntry() const
+{
+    return mSelectedEntry;
+}
 
-	std::mutex& ProcessContainer::GetMutex() {
-		return mMutex;
-	}
+ProcessEntry* ProcessContainer::FindEntry(const ProcessEntry* entry) const
+{
+    if (!entry) {
+        return nullptr;
+    }
+    return FindEntry(entry->GetProcessId());
+}
 
-	std::vector<ProcessEntry*>& ProcessContainer::GetEntries()
-	{
-		return mEntries;
-	}
+ProcessEntry* ProcessContainer::FindEntry(uint32_t procId) const
+{
+    for (auto* proc : mEntries) {
+        if (proc->GetProcessId() == procId) {
+            return proc;
+        }
+    }
 
-	ProcessEntry* ProcessContainer::GetSelectedEntry() const
-	{
-		return mSelectedEntry;
-	}
+    return nullptr;
+}
 
-	ProcessEntry* ProcessContainer::FindEntry(const ProcessEntry* entry) const
-	{
-		if (!entry) { return nullptr; }
-		return FindEntry(entry->GetProcessId());
-	}
+void ProcessContainer::AddEntry(ProcessEntry* entry)
+{
+    mEntries.emplace_back(entry);
+}
 
-	ProcessEntry* ProcessContainer::FindEntry(uint32_t procId) const
-	{
-		for (auto* proc : mEntries)
-		{
-			if (proc->GetProcessId() == procId)
-			{
-				return proc;
-			}
-		}
+void ProcessContainer::SelectEntry(const uint32_t procId, bool preserve)
+{
+    auto* entry = FindEntry(procId);
 
-		return nullptr;
-	}
+    if (mSelectedEntry) {
+        // Deselect the entry
+        mSelectedEntry->Deselect();
 
-	void ProcessContainer::AddEntry(ProcessEntry* entry)
-	{
-		mEntries.emplace_back(entry);
-	}
+        // Check if the entry is also the selected entry
+        if (entry && (mSelectedEntry->GetProcessId() == entry->GetProcessId())) {
+            if (preserve) {
+                // Keep this selected
+                mSelectedEntry->Select();
+            } else {
+                // There is no selected entry
+                mSelectedEntry = nullptr;
+            }
+            return;
+        }
+    }
 
-	void ProcessContainer::SelectEntry(const uint32_t procId, bool preserve)
-	{
-		auto* entry = FindEntry(procId);
+    if ((mSelectedEntry = entry)) {
+        mSelectedEntry->Select();
+    }
+}
 
-		if (mSelectedEntry) {
-			if (mSelectedEntry->GetProcessId() == entry->GetProcessId())
-			{
-				// Keep this selected
-				if (preserve) {
-					return;
-				}
-			}
+void ProcessContainer::SelectEntry(ProcessEntry* entry, bool preserve)
+{
+    if (entry) {
+        SelectEntry(entry->GetProcessId(), preserve);
+    } else {
+        mSelectedEntry = nullptr;
+    }
+}
 
-			mSelectedEntry->Deselect();
-		}
+void ProcessContainer::EraseEntry(const ProcessEntry* entry)
+{
+    if (!entry) {
+        return;
+    }
 
-		if ((mSelectedEntry = entry)) {
-			mSelectedEntry->Select();
-		}
-	}
+    for (auto it = mEntries.begin(); it != mEntries.end(); ++it) {
+        if (auto proc = mEntries.at(reinterpret_cast<std::vector<ProcessEntry*>::size_type>(&it));
+            proc->GetProcessId() == entry->GetProcessId()) {
+            delete proc;
+            proc = nullptr;
+            break;
+        }
+    }
+}
 
-	void ProcessContainer::SelectEntry(ProcessEntry* entry, bool preserve)
-	{
-		if (entry) {
-			SelectEntry(entry->GetProcessId(), preserve);
-		}
-		else
-		{
-			mSelectedEntry = nullptr;
-		}
-	}
+void ProcessContainer::Copy(ProcessContainer* other)
+{
+    if (this == other) {
+        return;
+    }
 
-	void ProcessContainer::EraseEntry(const ProcessEntry* entry)
-	{
-		if (!entry) { return; }
+    Clear(mMutex);
 
-		for (auto it = mEntries.begin(); it != mEntries.end(); ++it)
-		{
-			if (auto proc =
-				mEntries.at(reinterpret_cast<std::vector<ProcessEntry*>::size_type>(&it));
-				proc->GetProcessId() == entry->GetProcessId())
-			{
-				delete proc;
-				proc = nullptr;
-				break;
-			}
-		}
-	}
+    std::scoped_lock lock1(mMutex);
+    std::scoped_lock lock2(other->GetMutex());
 
-	void ProcessContainer::Copy(ProcessContainer* other)
-	{
-		if (this == other) { return; }
-
-		Clear(mMutex);
-
-		std::scoped_lock lock1(mMutex);
-		std::scoped_lock lock2(other->GetMutex());
-
-		for (const auto* entry : other->GetEntries()) {
-			mEntries.emplace_back(new ProcessEntry(entry));
-		}
-	}
-
+    for (const auto* entry : other->GetEntries()) {
+        mEntries.emplace_back(new ProcessEntry(entry));
+    }
+}
 }
