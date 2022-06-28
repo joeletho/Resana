@@ -120,6 +120,7 @@ void ProcessContainer::Copy(ProcessContainer* other)
     }
 
     Clear(mMutex);
+    mSelectedEntry = nullptr;
 
     std::scoped_lock lock1(mMutex);
     std::scoped_lock lock2(other->GetMutex());
