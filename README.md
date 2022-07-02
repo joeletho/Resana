@@ -32,7 +32,7 @@ This program is a experiment and work-in-progress that allows me to learn more a
     * Rework update interval speed selection
     * Process panel:
       * Get process memory usage and module ID data working
-      * Get processes sortable by name
+      * ~~Get processes sortable by name~~
       * Get processes findable (i.e. searchable)
     * Performance panel:
       * Show total CPU load usage in table header (or something)
@@ -43,7 +43,7 @@ This program is a experiment and work-in-progress that allows me to learn more a
 ---
 
   ### Bugs
-  * Fix 'View' menu in Process Details to stop it from taking context when hovered
+  * ~~Fix 'View' menu in Process Details to stop it from taking context when hovered~~
   * ~~Closing Resource Analyzer panel crashes program~~
   * Program exits after waiting for ending threads to join. This can take a few seconds and can be improved with an event system _(coming in the future)_
   * ~~Processes are not deselected when clicking a selected process.~~
