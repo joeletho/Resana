@@ -299,7 +299,7 @@ void ProcessPanel::SetupTableColumns()
 {
     constexpr int freezeCols = 0, freezeRows = 1;
     ImGui::TableSetupScrollFreeze(freezeCols, freezeRows);
-    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder, 160.0f, View_ProcessName);
+    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_PreferSortDescending | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder, 160.0f, View_ProcessName);
 
     if (CheckMenuOption(View_ProcessId)) {
         ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed, 50.0f, View_ProcessId);
