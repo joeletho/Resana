@@ -1,0 +1,6 @@
+[submodule "resana/lib/glfw"]
+	path = resana/lib/glfw
+	url = https://github.com/brolgedu/glfw.git
+[submodule "resana/lib/spdlog"]
+	path = resana/lib/spdlog
+	url = https://github.com/brolgedu/spdlog
