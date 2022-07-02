@@ -1,29 +1,26 @@
 #pragma once
 
 #include "core/Layer.h"
-
 #include "helpers/Time.h"
-#include "panels/ResourceAnalyzer.h"
+#include "panels/SystemTasksPanel.h"
 
-namespace RESANA
-{
+namespace RESANA {
 
-	class ExampleLayer final : public Layer
-	{
-	public:
-		ExampleLayer();
-		~ExampleLayer() override;
+class ExampleLayer final : public Layer {
+public:
+    ExampleLayer();
+    ~ExampleLayer() override;
 
-		void OnAttach() override;
-		void OnDetach() override;
-		void OnUpdate(Timestep ts) override;
-		void OnImGuiRender() override;
+    void OnAttach() override;
+    void OnDetach() override;
+    void OnUpdate(Timestep ts) override;
+    void OnImGuiRender() override;
 
-		void ShowResanaPanel();
+    void ShowSystemTasksPanel();
 
-	private:
-		ResourceAnalyzer* mResanaPanel = nullptr;
-		bool mShowResanaPanel = false;
-	};
+private:
+    SystemTasksPanel* mSystemTasksPanel = nullptr;
+    bool mShowSystemTasksPanel = false;
+};
 
 }
