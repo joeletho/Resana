@@ -60,6 +60,7 @@ ProcessEntry* ProcessContainer::FindEntry(uint32_t procId) const
 void ProcessContainer::AddEntry(ProcessEntry* entry)
 {
     mEntries.emplace_back(entry);
+    SetDirty();
 }
 
 void ProcessContainer::SelectEntry(const uint32_t procId, bool preserve)
@@ -111,6 +112,8 @@ void ProcessContainer::EraseEntry(const ProcessEntry* entry)
             break;
         }
     }
+
+    SetDirty();
 }
 
 void ProcessContainer::Copy(ProcessContainer* other)
@@ -128,5 +131,7 @@ void ProcessContainer::Copy(ProcessContainer* other)
     for (const auto* entry : other->GetEntries()) {
         mEntries.emplace_back(new ProcessEntry(entry));
     }
+
+    SetDirty();
 }
 }
