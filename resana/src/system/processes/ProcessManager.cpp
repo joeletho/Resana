@@ -7,6 +7,7 @@
 #include "helpers/WinFuncs.h"
 
 #include <Windows.h>
+#include <TlHelp32.h>
 #include <ProcessSnapshot.h>
 
 #include "core/Application.h"
@@ -180,7 +181,7 @@ namespace RESANA {
 			Time::Sleep(1);
 			if (error || !IsRunning()) {
 				return false;
-			};
+			}
 		}
 
 		threadPool.Queue([&] {
@@ -203,7 +204,7 @@ namespace RESANA {
 			Time::Sleep(1);
 			if (error || !IsRunning()) {
 				return false;
-			};
+			}
 		}
 
 		threadPool.Queue([&, this] {
@@ -239,7 +240,7 @@ namespace RESANA {
 			Time::Sleep(1);
 			if (error || !IsRunning()) {
 				return false;
-			};
+			}
 		}
 
 		// Remove any processes not currently running
