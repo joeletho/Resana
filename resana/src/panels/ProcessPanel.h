@@ -27,16 +27,16 @@ public:
     void OnUpdate(Timestep ts) override;
     void OnImGuiRender() override;
 
-    void UpdateProcesses();
+    void UpdateProcessList();
     void ShowPanel(bool* pOpen) override;
     void ShowPanelMenu();
     void SetUpdateInterval(Timestep interval) override;
 
     bool IsPanelOpen() const override { return mPanelOpen; }
-    bool* GetMenuOption(ProcessMenu item);
-    bool CheckMenuOption(ProcessMenu item);
+    bool* GetMenuOption(ProcessMenu option);
+    bool CheckMenuOption(ProcessMenu option);
 
-    uint32_t GetTableColumnCount() const;
+    [[nodiscard]] uint32_t GetTableColumnCount() const;
 
     void SortTableEntries();
     static bool CompareWithSortSpecs(const void* lhs, const void* rhs);

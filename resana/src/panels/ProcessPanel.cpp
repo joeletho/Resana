@@ -45,7 +45,7 @@ void ProcessPanel::OnUpdate(const Timestep ts)
     if (IsPanelOpen()) {
         ProcessManager::Run();
         mProcessManager->SetUpdateInterval(mUpdateInterval);
-        UpdateProcesses();
+        UpdateProcessList();
     }
 }
 
@@ -53,7 +53,7 @@ void ProcessPanel::OnImGuiRender()
 {
 }
 
-void ProcessPanel::UpdateProcesses()
+void ProcessPanel::UpdateProcessList()
 {
     const auto& app = Application::Get();
     auto& threadPool = app.GetThreadPool();
