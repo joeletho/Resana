@@ -4,6 +4,9 @@ Somewhat of a Windows Task Manager clone, Resana provides live statistics of sys
 
 This program is a experiment and work-in-progress that allows me to learn more about software engineering and development, system design, databases, and offers an experience in other advanced topics such as multi-threading and parallel processing.
 
+<img align="left" width="382" height="400" src="https://github.com/joeletho/Resana/blob/main/resana/assets/images/resana_proc.png">
+<img align="" width="382" height="400" src="https://github.com/joeletho/Resana/blob/main/resana/assets/images/resana_perf.png">
+
 ---
 
 ### Currently supported Data
