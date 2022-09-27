@@ -1,205 +1,206 @@
-#include "rspch.h"
 #include "PerformancePanel.h"
+#include "rspch.h"
 
 #include <imgui.h>
 
-namespace RESANA
+#include "core/Application.h"
+
+namespace RESANA {
+
+PerformancePanel::PerformancePanel() = default;
+
+PerformancePanel::~PerformancePanel() = default;
+
+void PerformancePanel::OnAttach()
 {
+    mUpdateInterval = TimeTick::Rate::Normal;
+    mPanelOpen = false;
+    InitMemoryPanel();
+    InitCpuPanel();
+}
 
-	PerformancePanel::PerformancePanel()
-	{
-	}
+void PerformancePanel::OnDetach()
+{
+    mPanelOpen = false;
+    MemoryPerformance::Get()->Shutdown();
+    mMemoryInfo = nullptr;
+    CpuPerformance::Get()->Shutdown();
+    mCpuInfo = nullptr;
+}
 
-	PerformancePanel::~PerformancePanel()
-	{
-	}
+void PerformancePanel::OnUpdate(Timestep ts)
+{
+    mUpdateInterval = (uint32_t)ts;
+    if (mPanelOpen) {
+        UpdateMemoryPanel();
+        UpdateCpuPanel();
+    }
+}
 
-	void PerformancePanel::OnAttach()
-	{
-		mUpdateInterval = TimeTick::Rate::Normal;
-		mPanelOpen = false;
-		InitMemoryPanel();
-		InitCpuPanel();
-	}
+void PerformancePanel::OnImGuiRender()
+{
+}
 
-	void PerformancePanel::OnDetach()
-	{
-		mPanelOpen = false;
-		MemoryPerformance::Shutdown();
-		mMemoryInfo = nullptr;
-		CPUPerformance::Shutdown();
-		mCPUInfo = nullptr;
-	}
+void PerformancePanel::ShowPanel(bool* pOpen)
+{
+    if ((mPanelOpen = *pOpen)) {
+        if (ImGui::BeginChild("Performance", ImGui::GetContentRegionAvail())) {
+            UpdateMemoryPanel();
+            UpdateCpuPanel();
 
-	void PerformancePanel::OnUpdate(Timestep ts)
-	{
-		if (mPanelOpen)
-		{
-			mUpdateInterval = (uint32_t)ts;
-			UpdateMemoryPanel();
-			UpdateCpuPanel();
-		}
-	}
+            ShowCpuTable();
+            ImGui::TextUnformatted("Memory");
+            ShowPhysicalMemoryTable();
+            ShowVirtualMemoryTable();
+        }
 
-	void PerformancePanel::OnImGuiRender()
-	{
-	}
+        ImGui::EndChild();
+    } else {
+        ClosePanels();
+    }
+}
 
-	void PerformancePanel::ShowPanel(bool* pOpen)
-	{
-		if ((mPanelOpen = *pOpen))
-		{
-			if (ImGui::BeginChild("Performance", ImGui::GetContentRegionAvail())) \
-			{
-				UpdateMemoryPanel();
-				UpdateCpuPanel();
+void PerformancePanel::SetUpdateInterval(Timestep interval)
+{
+    mUpdateInterval = (uint32_t)interval;
+}
 
-				ShowCPUTable();
-				ImGui::TextUnformatted("Memory");
-				ShowPhysicalMemoryTable();
-				ShowVirtualMemoryTable();
-			}
+void PerformancePanel::ShowPhysicalMemoryTable() const
+{
+    ImGui::BeginTable("##Physical Memory", 2, ImGuiTableFlags_Borders);
+    ImGui::TableSetupColumn("Physical");
+    ImGui::TableSetupColumn("##values");
+    ImGui::TableHeadersRow();
+    ImGui::TableNextColumn();
 
-			ImGui::EndChild();
-		}
-		else
-		{
-			ClosePanels();
-		}
-	}
+    // TODO: Resize columns based on size
+    ImGui::Text("Total");
+    ImGui::Text("In use");
+    ImGui::Text("Available");
+    ImGui::Text("Used by process");
+    ImGui::TableNextColumn();
 
-	void PerformancePanel::SetUpdateInterval(Timestep interval)
-	{
-		mUpdateInterval = (uint32_t)interval;
-	}
+    const auto totalMem = mMemoryInfo->GetTotalPhysicalMB();
+    const auto usedMem = mMemoryInfo->GetUsedPhysicalMB();
+    const auto usedPercent = mMemoryInfo->GetMemoryLoad();
+    const auto availMem = mMemoryInfo->GetAvailPhysicalMB();
+    const auto procMem = MemoryPerformance::GetWorkingSetSizeMB(GetCurrentProcessId());
 
-	void PerformancePanel::ShowPhysicalMemoryTable() const
-	{
-		ImGui::BeginTable("##Physical Memory", 2, ImGuiTableFlags_Borders);
-		ImGui::TableSetupColumn("Physical");
-		ImGui::TableSetupColumn("##values");
-		ImGui::TableHeadersRow();
-		ImGui::TableNextColumn();
+    ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
+    ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
+    ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
+    ImGui::Text("%llu MB", procMem);
+    ImGui::EndTable();
+}
 
-		// TODO: Resize columns based on size
-		ImGui::Text("Total");
-		ImGui::Text("In use");
-		ImGui::Text("Available");
-		ImGui::Text("Used by process");
-		ImGui::TableNextColumn();
+void PerformancePanel::ShowVirtualMemoryTable() const
+{
+    ImGui::BeginTable("##Virtual Memory", 2, ImGuiTableFlags_Borders);
+    ImGui::TableSetupColumn("Virtual");
+    ImGui::TableSetupColumn("##values");
+    ImGui::TableHeadersRow();
+    ImGui::TableNextColumn();
 
-		const auto totalMem = mMemoryInfo->GetTotalPhys() / BYTES_PER_MB;
-		const auto usedMem = mMemoryInfo->GetUsedPhys() / BYTES_PER_MB;
-		const float usedPercent = (float)usedMem / (float)totalMem * 100.0f;
-		const auto availMem = mMemoryInfo->GetAvailPhys() / BYTES_PER_MB;
-		const auto procMem = mMemoryInfo->GetCurrProcUsagePhys() / BYTES_PER_MB;
+    ImGui::Text("Total");
+    ImGui::Text("In use");
+    ImGui::Text("Available");
+    ImGui::Text("Used by process");
+    ImGui::TableNextColumn();
 
-		ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
-		ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
-		ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
-		ImGui::Text("%lu MB", procMem);
-		ImGui::EndTable();
-	}
+    const auto totalMem = mMemoryInfo->GetTotalVirtual() / BYTES_PER_MB;
+    const auto usedMem = mMemoryInfo->GetUsedVirtual() / BYTES_PER_MB;
+    const float usedPercent = (float)usedMem / (float)totalMem * 100.0f;
+    const auto availMem = mMemoryInfo->GetAvailVirtual() / BYTES_PER_MB;
+    const auto procMem = mMemoryInfo->GetCurrProcUsageVirtual() / BYTES_PER_MB;
 
-	void PerformancePanel::ShowVirtualMemoryTable() const
-	{
-		ImGui::BeginTable("##Virtual Memory", 2, ImGuiTableFlags_Borders);
-		ImGui::TableSetupColumn("Virtual");
-		ImGui::TableSetupColumn("##values");
-		ImGui::TableHeadersRow();
-		ImGui::TableNextColumn();
+    ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
+    ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
+    ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
+    ImGui::Text("%lu MB", procMem);
+    ImGui::EndTable();
+}
 
-		ImGui::Text("Total");
-		ImGui::Text("In use");
-		ImGui::Text("Available");
-		ImGui::Text("Used by process");
-		ImGui::TableNextColumn();
+void PerformancePanel::ShowCpuTable()
+{
+    ImGui::BeginTable("##Cpu", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable);
+    ImGui::TableSetupColumn("Cpu");
+    ImGui::TableSetupColumn("##values");
+    ImGui::TableHeadersRow();
+    ImGui::TableNextColumn();
 
-		const auto totalMem = mMemoryInfo->GetTotalVirtual() / BYTES_PER_MB;
-		const auto usedMem = mMemoryInfo->GetUsedVirtual() / BYTES_PER_MB;
-		const float usedPercent = (float)usedMem / (float)totalMem * 100.0f;
-		const auto availMem = mMemoryInfo->GetAvailVirtual() / BYTES_PER_MB;
-		const auto procMem = mMemoryInfo->GetCurrProcUsageVirtual() / BYTES_PER_MB;
+    mCpuInfo = CpuPerformance::Get();
+    if (const auto& data = mCpuInfo->GetData()) {
+        std::scoped_lock slock(data->GetMutex());
 
-		ImGui::Text("%llu.%llu GB", totalMem / 1000, totalMem % 10);
-		ImGui::Text("%llu.%llu GB (%.1f%%)", usedMem / 1000, usedMem % 10, usedPercent);
-		ImGui::Text("%llu.%llu GB", availMem / 1000, availMem % 10);
-		ImGui::Text("%lu MB", procMem);
-		ImGui::EndTable();
-	}
+        for (const auto& p : data->GetProcessors()) {
+            ImGui::Text("cpu %s", p->szName);
+        }
 
-	void PerformancePanel::ShowCPUTable()
-	{
-		ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable);
-		ImGui::TableSetupColumn("CPU");
-		ImGui::TableSetupColumn("##values");
-		ImGui::TableHeadersRow();
-		ImGui::TableNextColumn();
+        ImGui::Text("Total");
+        ImGui::Text("Used by process");
+        ImGui::TableNextColumn();
 
-		mCPUInfo = CPUPerformance::Get();
-		if (const auto& data = mCPUInfo->GetData())
-		{
-			std::scoped_lock slock(data->GetMutex());
+        // Display values for all logical processors
+        for (const auto& p : data->GetProcessors()) {
+            ImGui::Text("%.1f%%", p->FmtValue.doubleValue);
+        }
 
-			for (const auto& p : data->GetProcessors()) {
-				ImGui::Text("cpu %s", p->szName);
-			}
+        // Display current Cpu load and load in use by process
+        const double currLoad = mCpuInfo->GetCurrentLoad();
+        ImGui::Text("%.1f%%", currLoad);
 
-			ImGui::Text("Total");
-			ImGui::Text("Used by process");
-			ImGui::TableNextColumn();
+        static long long start = Time::GetTime();
+        static long long delta;
+        static double procLoad = 0.0;
 
-			// Display values for all logical processors
-			for (const auto& p : data->GetProcessors()) {
-				ImGui::Text("%.1f%%", p->FmtValue.doubleValue);
-			}
+        delta = Time::GetTime() - start;
+        if (delta > 1000) { // one second (ms)
+            procLoad = mCpuInfo->GetCurrentProcessLoad();
+            start = Time::GetTime();
+        }
+        ImGui::Text("%.1f%%", procLoad);
 
-			// Display current CPU load and load in use by process
-			const double currLoad = mCPUInfo->GetAverageLoad();
-			const double procLoad = mCPUInfo->GetCurrentProcessLoad();
-			ImGui::Text("%.1f%%", currLoad);
-			ImGui::Text("%.1f%%", procLoad);
+        mCpuInfo->ReleaseData();
+    }
 
-			mCPUInfo->ReleaseData();
-		}
+    ImGui::EndTable();
+}
 
-		ImGui::EndTable();
-	}
+void PerformancePanel::InitCpuPanel()
+{
+    mCpuInfo = CpuPerformance::Get();
+    mCpuInfo->SetUpdateInterval(mUpdateInterval);
+}
 
-	void PerformancePanel::InitCpuPanel() const
-	{
-		mCPUInfo = CPUPerformance::Get();
-		mCPUInfo->SetUpdateInterval(mUpdateInterval);
-	}
+void PerformancePanel::UpdateCpuPanel()
+{
+    if (!mCpuInfo) {
+        InitCpuPanel();
+    }
 
-	void PerformancePanel::UpdateCpuPanel() const
-	{
-		if (!mCPUInfo)
-			InitCpuPanel();
+    CpuPerformance::Get()->Run();
+    mCpuInfo->SetUpdateInterval(mUpdateInterval);
+}
 
-		CPUPerformance::Run();
-		mCPUInfo->SetUpdateInterval(mUpdateInterval);
-	}
+void PerformancePanel::InitMemoryPanel()
+{
+    mMemoryInfo = MemoryPerformance::Get();
+    mMemoryInfo->SetUpdateInterval(mUpdateInterval);
+}
 
-	void PerformancePanel::InitMemoryPanel() const
-	{
-		mMemoryInfo = MemoryPerformance::Get();
-		mMemoryInfo->SetUpdateInterval(mUpdateInterval);
-	}
+void PerformancePanel::UpdateMemoryPanel()
+{
+    if (!mMemoryInfo)
+        InitMemoryPanel();
 
-	void PerformancePanel::UpdateMemoryPanel() const
-	{
-		if (!mMemoryInfo)
-			InitMemoryPanel();
+    MemoryPerformance::Get()->Run();
+    mMemoryInfo->SetUpdateInterval(mUpdateInterval);
+}
 
-		MemoryPerformance::Run();
-		mMemoryInfo->SetUpdateInterval(mUpdateInterval);
-	}
-
-	void PerformancePanel::ClosePanels()
-	{
-		MemoryPerformance::Stop();
-		CPUPerformance::Stop();
-	}
+void PerformancePanel::ClosePanels()
+{
+    MemoryPerformance::Get()->Stop();
+    CpuPerformance::Get()->Stop();
+}
 
 } // RESANA

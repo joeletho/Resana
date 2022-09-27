@@ -19,8 +19,7 @@ public:
     void ShowSystemTasksPanel();
 
 private:
-    SystemTasksPanel* mSystemTasksPanel = nullptr;
-    bool mShowSystemTasksPanel = false;
+    std::shared_ptr<SystemTasksPanel> mSystemTasksPanel = nullptr;
 };
 
 }

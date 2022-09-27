@@ -4,65 +4,64 @@
 
 namespace RESANA {
 
-	template<class T>
-	class LayerStack {
-	public:
-		LayerStack();
-		~LayerStack();
+template <class T, typename Sp = std::shared_ptr<T>>
+class LayerStack {
+public:
+    LayerStack();
+    ~LayerStack();
 
-		void PushLayer(T* layer);
-		void PopLayer(T* layer);
+    void PushLayer(Sp layer);
+    void PopLayer(Sp layer);
 
-		typename std::vector<T*>::iterator begin();
+    typename std::vector<Sp>::iterator begin();
+    typename std::vector<Sp>::iterator end();
 
-		typename std::vector<T*>::iterator end();
+private:
+    std::vector<Sp> mLayers;
+    unsigned int mLayerInsertIndex = 0;
+};
 
-	private:
-		std::vector<T*> mLayers;
-		unsigned int mLayerInsertIndex = 0;
-	};
+template <class T, typename Sp>
+LayerStack<T, Sp>::LayerStack() = default;
 
-	template <class T>
-	LayerStack<T>::LayerStack()
-	{
-	}
+template <class T, typename Sp>
 
-	template <class T>
-	LayerStack<T>::~LayerStack()
-	{
-		for (const T* layer : mLayers) {
-			delete layer;
-			layer = nullptr;
-		}
-	}
+LayerStack<T, Sp>::~LayerStack()
+{
+    mLayers.clear();
+}
 
-	template <class T>
-	void LayerStack<T>::PushLayer(T* layer)
-	{
-		mLayers.emplace(mLayers.begin() + (int)mLayerInsertIndex, layer);
-		++mLayerInsertIndex;
-	}
+template <class T, typename Sp>
 
-	template <class T>
-	void LayerStack<T>::PopLayer(T* layer)
-	{
-		auto it = std::find(mLayers.begin(), mLayers.end(), layer);
-		if (it != mLayers.end()) {
-			mLayers.erase(it);
-			--mLayerInsertIndex;
-		}
-	}
+void LayerStack<T, Sp>::PushLayer(Sp layer)
+{
+    mLayers.emplace(mLayers.begin() + (int)mLayerInsertIndex, layer);
+    ++mLayerInsertIndex;
+}
 
-	template <class T>
-	typename std::vector<T*>::iterator LayerStack<T>::begin()
-	{
-		return mLayers.begin();
-	}
+template <class T, typename Sp>
 
-	template <class T>
-	typename std::vector<T*>::iterator LayerStack<T>::end()
-	{
-		return mLayers.end();
-	}
+void LayerStack<T, Sp>::PopLayer(Sp layer)
+{
+    auto it = std::find(mLayers.begin(), mLayers.end(), layer);
+    if (it != mLayers.end()) {
+        mLayers.erase(it);
+        --mLayerInsertIndex;
+    }
+}
+
+template <class T, typename Sp>
+
+typename std::vector<Sp>::iterator LayerStack<T, Sp>::begin()
+{
+    return mLayers.begin();
+}
+
+template <class T, typename Sp>
+
+typename std::vector<Sp>::iterator LayerStack<T, Sp>::end()
+{
+    return mLayers.end();
+}
 
 } // RESANA

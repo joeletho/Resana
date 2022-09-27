@@ -5,43 +5,42 @@
 #include <map>
 #include <mutex>
 
-namespace RESANA
-{
+namespace RESANA {
 
-	class ProcessMap
-	{
-		typedef unsigned long ulong;
-	public:
-		ProcessMap();
-		~ProcessMap();
+class ProcessMap {
+  typedef unsigned long ulong;
 
-		std::recursive_mutex& GetMutex();
+public:
+  ProcessMap();
+  ~ProcessMap();
 
-		[[nodiscard]] ProcessEntry* Find(ulong procId) const;
+  std::recursive_mutex &GetMutex();
 
-		[[nodiscard]] int Count(ulong procId)const;
-		[[nodiscard]] int Size() const;
+  [[nodiscard]] std::shared_ptr<ProcessEntry> Find(ulong procId);
 
-		[[nodiscard]] bool Contains(ulong procId) const;
-		[[nodiscard]] bool Empty() const;
+  [[nodiscard]] int Count(ulong procId);
+  [[nodiscard]] int Size() const;
 
-		void Clear();
-		void Emplace(ProcessEntry* entry);
-		void Erase(ulong procId);
-		void Erase(const ProcessEntry* entry);
+  [[nodiscard]] bool Contains(ulong procId);
+  [[nodiscard]] bool Empty() const;
 
-		// Overloads
-		auto begin() { return mMap.begin(); }
-		auto end() { return mMap.end(); }
-		[[nodiscard]] auto cbegin() const { return mMap.cbegin(); }
-		[[nodiscard]] auto cend() const { return mMap.cend(); }
+  void Clear();
+  void Emplace(std::shared_ptr<ProcessEntry> &entry);
+  void Erase(ulong procId);
+  void Erase(std::shared_ptr<ProcessEntry> &entry);
 
-		ProcessEntry* operator[](ulong procId) const;
+  // Overloads
+  auto begin() { return mMap.begin(); }
+  auto end() { return mMap.end(); }
+  [[nodiscard]] auto cbegin() const { return mMap.cbegin(); }
+  [[nodiscard]] auto cend() const { return mMap.cend(); }
 
-	private:
-		std::map<ulong, ProcessEntry*> mMap{};
-		std::recursive_mutex mMutex{};
-		std::unique_lock<std::recursive_mutex> mLock;
-	};
+  std::shared_ptr<ProcessEntry> operator[](ulong procId);
 
-}
+private:
+  std::map<ulong, std::shared_ptr<ProcessEntry>> mMap{};
+  std::recursive_mutex mMutex{};
+  std::unique_lock<std::recursive_mutex> mLock;
+};
+
+} // namespace RESANA

@@ -1,153 +1,69 @@
 #pragma once
 
-#include "ProcessContainer.h"
-
+#include "Process.h"
+#include <atomic>
 #include <mutex>
 #include <string>
 
-#include <TlHelp32.h>
-
 namespace RESANA {
 
-class ProcessEntry {
-    typedef unsigned long ulong;
+struct PdhData;
 
-    struct Process {
-        std::string Name {};
-        ulong ProcessId {};
-        ulong ParentProcessId {};
-        ulong ModuleId {};
-        ulong MemoryUsage {};
-        ulong ThreadCount {};
-        ulong PriorityClass {};
-        ulong Flags {};
-
-        explicit Process(const PROCESSENTRY32& pe32)
-        {
-            Name.assign(pe32.szExeFile);
-            ProcessId = pe32.th32ProcessID;
-            ParentProcessId = pe32.th32ParentProcessID;
-            ModuleId = pe32.th32ModuleID;
-            MemoryUsage = pe32.cntUsage;
-            ThreadCount = pe32.cntThreads;
-            PriorityClass = pe32.pcPriClassBase;
-            Flags = pe32.dwFlags;
-        }
-
-        explicit Process(const ProcessEntry* other)
-        {
-            Name.assign(other->GetName());
-            ProcessId = other->GetProcessId();
-            ParentProcessId = other->GetParentProcessId();
-            ModuleId = other->GetModuleId();
-            MemoryUsage = other->GetMemoryUsage();
-            ThreadCount = other->GetThreadCount();
-            PriorityClass = other->GetPriorityClass();
-            Flags = other->GetFlags();
-        }
-    };
-
+class ProcessEntry : public Process {
 public:
-    explicit ProcessEntry(const PROCESSENTRY32& pe32)
-        : mProcess(pe32)
-        , mLock(mMutex, std::defer_lock)
-    {
-        this->operator=(pe32);
-    }
+  ProcessEntry(const PROCESSENTRY32 &pe32);
+  ProcessEntry(const std::shared_ptr<Process> &process);
+  ProcessEntry(const std::shared_ptr<ProcessEntry> &entry);
+  ~ProcessEntry();
 
-    explicit ProcessEntry(const ProcessEntry* entry)
-        : mProcess(entry)
-        , mLock(mMutex, std::defer_lock)
-    {
-        this->operator=(entry);
-    }
+  [[nodiscard]] std::shared_ptr<PdhData> GetData() const;
+  [[nodiscard]] double GetCpuLoad() const;
 
-    ~ProcessEntry()
-    {
-        // Acquire mutex and release upon destruction.
-        std::scoped_lock lock(mMutex);
-    }
+  std::string GetName() const { return mName; }
+  uint32_t GetId() const { return mId; }
+  uint32_t GetParentId() const { return mParentId; }
+  uint32_t GetModuleId() const { return mModuleId; }
+  uint32_t GetThreadCount() const { return mThreadCount; }
+  uint32_t GetPriorityClass() const { return mPriorityClass; }
+  uint32_t GetFlags() const { return mFlags; }
+  uint64_t GetPrivateUsage() const { return mPrivateUsage; }
+  uint64_t GetWorkingSetSize() const { return mWorkingSetSize; }
+  std::shared_ptr<PdhData> GetData() { return this->mData; }
+  bool IsRunning() const { return mRunning; }
 
-    [[nodiscard]] ulong GetMemoryUsage() const { return mProcess.MemoryUsage; }
-    [[nodiscard]] ulong GetProcessId() const { return mProcess.ProcessId; }
-    [[nodiscard]] ulong GetModuleId() const { return mProcess.ModuleId; }
-    [[nodiscard]] ulong GetThreadCount() const { return mProcess.ThreadCount; }
-    [[nodiscard]] ulong GetParentProcessId() const { return mProcess.ParentProcessId; }
-    [[nodiscard]] ulong GetFlags() const { return mProcess.Flags; }
-    [[nodiscard]] std::string GetName() const { return mProcess.Name; }
-    [[nodiscard]] ulong GetPriorityClass() const { return mProcess.PriorityClass; }
+  void SetName()  { mName; }
+  void SetId(uint32_t id)  { mId = id; }
+  void SetParentId(uint32_t id)  { mParentId = id; }
+  void SetModuleId(uint32_t id)  { mModuleId = id; }
+  void SetThreadCount(uint32_t count)  { mThreadCount = count; }
+  void SetPriorityClass(uint32_t pclass)  { mPriorityClass = pclass; }
+  void SetFlags(uint32_t  flags)  { mFlags = flags; }
+  void SetPrivateUsage(uint32_t usage)  { mPrivateUsage = usage; }
+  void SetWorkingSetSize(uint32_t size)  { mWorkingSetSize = size; }
+  void SetData(std::shared_ptr<PdhData>& data);
+  void SetCpuLoad(float load);
 
-    void Free() { this->~ProcessEntry(); }
+  void UpdatePerfStats();
 
-    [[nodiscard]] bool IsSelected() const { return mSelected; }
-    bool& Running() { return mRunning; }
-    std::mutex& Mutex() { return mMutex; }
+  std::recursive_mutex &Mutex() { return mMutex; }
+  [[nodiscard]] bool IsSelected() const { return mSelected; }
 
-    // Overloads
-    ProcessEntry& operator=(const ProcessEntry* entry)
-    {
-        mProcess.Name.assign(entry->GetName());
-        mProcess.ProcessId = entry->GetProcessId();
-        mProcess.ParentProcessId = entry->GetParentProcessId();
-        mProcess.ModuleId = entry->GetModuleId();
-        mProcess.MemoryUsage = entry->GetMemoryUsage();
-        mProcess.ThreadCount = entry->GetThreadCount();
-        mProcess.PriorityClass = entry->GetPriorityClass();
-        mProcess.Flags = entry->GetFlags();
-        mSelected = entry->IsSelected();
-        return *this;
-    }
-
-    ProcessEntry& operator=(const PROCESSENTRY32& pe32)
-    {
-        mProcess.Name.assign(pe32.szExeFile);
-        mProcess.ProcessId = pe32.th32ProcessID;
-        mProcess.ParentProcessId = pe32.th32ParentProcessID;
-        mProcess.ModuleId = pe32.th32ModuleID;
-        mProcess.MemoryUsage = pe32.cntUsage;
-        mProcess.ThreadCount = pe32.cntThreads;
-        mProcess.PriorityClass = pe32.pcPriClassBase;
-        mProcess.Flags = pe32.dwFlags;
-        return *this;
-    }
-
-    bool operator==(const PROCESSENTRY32 pe32) const
-    {
-    	return mProcess.Name == pe32.szExeFile ||
-			mProcess.ProcessId == pe32.th32ProcessID ||
-			mProcess.ParentProcessId == pe32.th32ParentProcessID ||
-			mProcess.ModuleId == pe32.th32ModuleID ||
-			mProcess.MemoryUsage == pe32.cntUsage ||
-			mProcess.ThreadCount == pe32.cntThreads ||
-			mProcess.PriorityClass == pe32.pcPriClassBase ||
-			mProcess.Flags == pe32.dwFlags;
-    }
-
-    bool operator!=(const PROCESSENTRY32& pe32) const
-    {
-    	return mProcess.Name != pe32.szExeFile ||
-			mProcess.ProcessId != pe32.th32ProcessID ||
-			mProcess.ParentProcessId != pe32.th32ParentProcessID ||
-			mProcess.ModuleId != pe32.th32ModuleID ||
-			mProcess.MemoryUsage != pe32.cntUsage ||
-			mProcess.ThreadCount != pe32.cntThreads ||
-			mProcess.PriorityClass != pe32.pcPriClassBase ||
-			mProcess.Flags != pe32.dwFlags;
-    }
+  // Overloads
+  ProcessEntry &operator=(ProcessEntry *entry);
+  ProcessEntry &operator=(Process *other);
 
 private:
-    void Select() { mSelected = true; }
-    void Deselect() { mSelected = false; }
+  void Select() { mSelected = true; }
+  void Deselect() { mSelected = false; }
 
 private:
-    Process mProcess;
-    std::mutex mMutex {};
-    std::unique_lock<std::mutex> mLock {};
-    bool mRunning = true;
-    bool mSelected = false;
+  std::recursive_mutex mMutex{};
+  std::unique_lock<std::recursive_mutex> mLock{};
+  std::atomic<bool> mRunning{true};
+  std::atomic<bool> mSelected{false};
 
-    friend class ProcessManager;
-    friend class ProcessContainer;
+  friend class ProcessManager;
+  friend class ProcessContainer;
 };
 
-}
+} // namespace RESANA

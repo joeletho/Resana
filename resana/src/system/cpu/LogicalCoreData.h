@@ -1,58 +1,87 @@
 #pragma once
 
-#include <vector>
 #include <memory>
 #include <mutex>
+#include <vector>
 
-#include <tchar.h>
 #include <Pdh.h>
+#include <tchar.h>
 
-namespace RESANA
-{
+namespace RESANA {
 
-	typedef PDH_FMT_COUNTERVALUE_ITEM PdhItem;
+typedef PDH_FMT_COUNTERVALUE_ITEM PdhItem;
 
-	struct PDHCounter
-	{
-		HANDLE Handle{};
-		HQUERY Query{};
-		PDH_HCOUNTER Counter{};
-		ULARGE_INTEGER Last{};
-		ULARGE_INTEGER LastSys{};
-		ULARGE_INTEGER LastUser{};
-	};
+struct PdhData {
+  HANDLE Handle{};
+  HQUERY Query{};
+  PDH_HCOUNTER Counter{};
+  uint64_t Time{};
+  uint64_t SystemTime{};
+  uint64_t UserTime{};
+  uint64_t CreationTime{};
+  uint64_t ExitTime{};
 
+  PdhData &operator=(const PdhData *data) {
+    if (Handle) {
+      CloseHandle(Handle);
+    }
+    if (Query) {
+      PdhCloseQuery(Query);
+    }
+    if (Counter) {
+      PdhRemoveCounter(Counter);
+    }
+    Handle = data->Handle;
+    Query = data->Query;
+    Counter = data->Counter;
 
-	class LogicalCoreData
-	{
-	public:
-		LogicalCoreData();
-		explicit LogicalCoreData(LogicalCoreData* other);
-		~LogicalCoreData();
+    ZeroMemory(&Time, sizeof(ULARGE_INTEGER));
+    memcpy(&Time, &data->Time, sizeof(ULARGE_INTEGER));
 
-		std::mutex& GetMutex();
+    ZeroMemory(&UserTime, sizeof(ULARGE_INTEGER));
+    memcpy(&UserTime, &data->UserTime, sizeof(ULARGE_INTEGER));
 
-		std::vector<PdhItem*>& GetProcessors();
+    ZeroMemory(&CreationTime, sizeof(ULARGE_INTEGER));
+    memcpy(&CreationTime, &data->CreationTime, sizeof(ULARGE_INTEGER));
 
-		void SetProcessorRef(PdhItem* ref);
-		PdhItem* GetProcessorRef();
+    ZeroMemory(&SystemTime, sizeof(ULARGE_INTEGER));
+    memcpy(&SystemTime, &data->SystemTime, sizeof(ULARGE_INTEGER));
 
-		[[nodiscard]] DWORD& GetSize();
+    ZeroMemory(&ExitTime, sizeof(ULARGE_INTEGER));
+    memcpy(&ExitTime, &data->ExitTime, sizeof(ULARGE_INTEGER));
 
-		DWORD& GetBuffer();
+    return *this;
+  }
+};
 
+class LogicalCoreData {
+public:
+    LogicalCoreData();
+    LogicalCoreData(const LogicalCoreData& other);
+    ~LogicalCoreData();
 
-		void Clear();
-		void Copy(LogicalCoreData* other);
+    std::mutex& GetMutex();
 
-		LogicalCoreData& operator=(LogicalCoreData* rhs);
+    std::vector<std::shared_ptr<PdhItem>>& GetProcessors();
 
-	private:
-		std::mutex mMutex{};
-		std::vector<PdhItem*> mProcessors{};
-		PdhItem* mProcessorRef = nullptr;
-		DWORD mSize = 0;
-		DWORD mBuffer = 0;
-	};
+    void SetProcessorRef(PdhItem* ref);
+    [[nodiscard]] PdhItem* GetProcessorRef() const;
+
+    [[nodiscard]] DWORD& GetSize();
+
+    DWORD& GetBuffer();
+
+    void Clear();
+    void Copy(const LogicalCoreData& other);
+
+    LogicalCoreData& operator=(const LogicalCoreData& rhs);
+
+private:
+    std::mutex mMutex {};
+    std::vector<std::shared_ptr<PdhItem>> mProcessors {};
+    PdhItem* mProcessorRef = nullptr;
+    DWORD mSize = 0;
+    DWORD mBuffer = 0;
+};
 
 }

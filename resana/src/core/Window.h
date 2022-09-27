@@ -12,9 +12,9 @@ namespace RESANA {
         unsigned int Width;
         unsigned int Height;
 
-        explicit WindowProps(std::string title = "Resource Analyzer",
-                             unsigned int width = 1280,
-                             unsigned int height = 720)
+        explicit WindowProps(std::string title = "Resana",
+                             unsigned int width = 680,
+                             unsigned int height = 700)
                 : Title(std::move(title)), Width(width), Height(height) {}
     };
 

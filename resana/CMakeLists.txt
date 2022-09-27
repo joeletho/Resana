@@ -38,7 +38,7 @@ list(REMOVE_ITEM RESANA_SOURCES
 
 message(${RESANA_SOURCES})
 
-add_executable(${PROJECT_NAME} "${RESANA_SOURCES}")
+add_executable(${PROJECT_NAME} "${RESANA_SOURCES}" "src/system/processes/Process.h" "src/system/processes/ProcessEntry.cpp" "src/system/processes/Process.cpp" "src/helpers/WinFuncs.h")
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE "${RESANA_SOURCE_DIR}/rspch.h")
 
@@ -73,4 +73,4 @@ add_dependencies(${PROJECT_NAME} copyAssets)
 # -----------------------------------------------------------------
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE=1)
-target_compile_definitions(${PROJECT_NAME} PUBLIC RS_ENABLE_ASSERTS=1 RS_DEBUG=1 RS_BUILD_DLL=1 BUILD_SHARED_LIB=1)
+target_compile_definitions(${PROJECT_NAME} PRIVATE RS_ENABLE_ASSERTS=1 RS_DEBUG=1)

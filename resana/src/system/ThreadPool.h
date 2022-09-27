@@ -1,37 +1,36 @@
 #pragma once
 
-#include <mutex>
-#include <functional>
-#include <queue>
 #include <condition_variable>
-#include <vector>
+#include <functional>
+#include <mutex>
+#include <queue>
 #include <thread>
+#include <vector>
 
-namespace RESANA
-{
+namespace RESANA {
 
-	class ThreadPool
-	{
-	public:
-		ThreadPool();
-		~ThreadPool();
+class ThreadPool {
+public:
+  ThreadPool();
+  ~ThreadPool();
 
-		void Start();
-		void Stop();
+  void Start();
+  void Stop();
 
-		void Queue(const std::function<void()>& job);
-		bool Busy();
-	private:
-		void ThreadLoop();
+  void Queue(const std::function<void()> &job);
+  bool Busy();
 
-	private:
-		std::queue<std::function<void()>> mQueue{};
-		std::vector<std::thread> mThreads{};
+private:
+  void ThreadLoop();
 
-		std::mutex mMutex{};
-		std::condition_variable mCondition{};
+private:
+  std::queue<std::function<void()>> mQueue{};
+  std::vector<std::thread> mThreads{};
 
-		bool mShouldTerminate = false;
-	};
+  std::mutex mMutex{};
+  std::condition_variable mCondition{};
 
-}
+  bool mShouldTerminate = false;
+};
+
+} // namespace RESANA

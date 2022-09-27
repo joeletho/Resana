@@ -1,80 +1,82 @@
-#include "rspch.h"
 #include "LogicalCoreData.h"
+#include "rspch.h"
 
-namespace RESANA
+namespace RESANA {
+LogicalCoreData::LogicalCoreData() = default;
+
+LogicalCoreData::LogicalCoreData(const LogicalCoreData& other)
 {
-	LogicalCoreData::LogicalCoreData() = default;
+    Copy(other);
+}
 
-	LogicalCoreData::LogicalCoreData(LogicalCoreData* other)
-	{
-		Copy(other);
-	}
+LogicalCoreData::~LogicalCoreData() = default;
 
-	LogicalCoreData::~LogicalCoreData() {
-		std::scoped_lock lock(mMutex);
-		for (const auto processor : mProcessors) {
-			delete processor;
-		}
-	}
+std::mutex& LogicalCoreData::GetMutex()
+{
+    return mMutex;
+}
 
-	std::mutex& LogicalCoreData::GetMutex()
-	{
-		return mMutex;
-	}
+std::vector<std::shared_ptr<PdhItem>>& LogicalCoreData::GetProcessors()
+{
+    return mProcessors;
+}
 
-	std::vector<PdhItem*>& LogicalCoreData::GetProcessors()
-	{
-		return mProcessors;
-	}
+void LogicalCoreData::SetProcessorRef(PdhItem* ref)
+{
+    if (mProcessorRef) {
+        delete mProcessorRef;
+        mProcessorRef = nullptr;
+    }
+    mProcessorRef = ref;
+}
 
-	void LogicalCoreData::SetProcessorRef(PdhItem* ref)
-	{
-		mProcessorRef = ref;
-	}
+PdhItem* LogicalCoreData::GetProcessorRef() const
+{
+    return mProcessorRef;
+}
 
-	PdhItem* LogicalCoreData::GetProcessorRef()
-	{
-		return mProcessorRef;
-	}
+DWORD& LogicalCoreData::GetSize()
+{
+    return mSize;
+}
 
-	DWORD& LogicalCoreData::GetSize()
-	{
-		return mSize;
-	}
+DWORD& LogicalCoreData::GetBuffer()
+{
+    return mBuffer;
+}
 
-	DWORD& LogicalCoreData::GetBuffer()
-	{
-		return mBuffer;
-	}
+void LogicalCoreData::Clear()
+{
+    std::mutex mutex;
+    std::scoped_lock lock(mutex);
+    mProcessors.clear();
+}
 
-	void LogicalCoreData::Clear()
-	{
-		std::scoped_lock lock(mMutex);
-		mProcessors.clear();
-	}
+void LogicalCoreData::Copy(const LogicalCoreData& other)
+{
+    if (this == &other) {
+        return;
+    }
 
-	void LogicalCoreData::Copy(LogicalCoreData* other)
-	{
-		if (this == other) { return; }
+    Clear();
 
-		Clear();
+    std::scoped_lock lock(mMutex);
 
-		std::scoped_lock lock(mMutex);
+    for (const auto& processor : other.mProcessors) {
+        auto copy = std::make_shared<PdhItem>(*processor);
+        mProcessors.emplace_back(copy);
+    }
 
-		for (const auto processor : other->mProcessors) {
-			auto copy = new PdhItem(*processor);
-			mProcessors.emplace_back(copy);
-		}
+    mProcessorRef = other.mProcessorRef;
+    mSize = other.mSize;
+    mBuffer = other.mBuffer;
+}
 
-		mProcessorRef = new PdhItem(*other->GetProcessorRef());
-		mSize = other->GetSize();
-		mBuffer = other->GetBuffer();
-
-	}
-
-	LogicalCoreData& LogicalCoreData::operator=(LogicalCoreData* rhs)
-	{
-		Copy(rhs);
-		return *this;
-	}
+LogicalCoreData& LogicalCoreData::operator=(const LogicalCoreData& rhs)
+{
+    if (this != &rhs) {
+        Copy(rhs);
+    }
+    return *this;
+}
 }

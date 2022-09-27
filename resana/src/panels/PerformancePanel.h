@@ -1,45 +1,43 @@
 #pragma once
 
 #include "Panel.h"
+#include "system/cpu/CpuPerformance.h"
 #include "system/memory/MemoryPerformance.h"
-#include "system/cpu/CPUPerformance.h"
 
 //#include "helpers/Time.h"
 
-namespace RESANA
-{
-	class PerformancePanel final : public Panel
-	{
-	public:
-		PerformancePanel();
-		~PerformancePanel() override;
+namespace RESANA {
+class PerformancePanel final : public Panel {
+public:
+    PerformancePanel();
+    ~PerformancePanel() override;
 
-		void OnAttach() override;
-		void OnDetach() override;
-		void OnUpdate(Timestep ts) override;
-		void OnImGuiRender() override;
-		void ShowPanel(bool* pOpen) override;
-		void SetUpdateInterval(Timestep interval) override;
+    void OnAttach() override;
+    void OnDetach() override;
+    void OnUpdate(Timestep ts) override;
+    void OnImGuiRender() override;
+    void ShowPanel(bool* pOpen) override;
+    void SetUpdateInterval(Timestep interval) override;
 
-		bool IsPanelOpen() const override { return mPanelOpen; };
-		
-	private:
-		void ShowPhysicalMemoryTable() const;
-		void ShowVirtualMemoryTable() const;
-		void ShowCPUTable();
-		void InitCpuPanel() const;
-		void UpdateCpuPanel() const;
-		void InitMemoryPanel() const;
-		void UpdateMemoryPanel() const;
+    bool IsPanelOpen() const override { return mPanelOpen; };
 
-		static void ClosePanels();
+private:
+    void ShowPhysicalMemoryTable() const;
+    void ShowVirtualMemoryTable() const;
+    void ShowCpuTable();
+    void InitCpuPanel();
+    void UpdateCpuPanel();
+    void InitMemoryPanel();
+    void UpdateMemoryPanel();
 
-	private:
-		mutable MemoryPerformance* mMemoryInfo = nullptr;
-		mutable CPUPerformance* mCPUInfo = nullptr;
-		bool mPanelOpen = false;
+    static void ClosePanels();
 
-		uint32_t mUpdateInterval{};
-	};
+private:
+    std::shared_ptr<MemoryPerformance> mMemoryInfo = nullptr;
+    std::shared_ptr<CpuPerformance> mCpuInfo = nullptr;
+    bool mPanelOpen = false;
+
+    uint32_t mUpdateInterval {};
+};
 
 } // RESANA

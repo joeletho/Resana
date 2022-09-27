@@ -1,65 +1,60 @@
 #pragma once
 
-#include "system/base/ConcurrentProcess.h"
+#include "system/base/SystemObject.h"
 
-#include "ProcessMap.h"
-#include "ProcessEntry.h"
 #include "ProcessContainer.h"
+#include "ProcessEntry.h"
+#include "ProcessMap.h"
 
 #include "helpers/Time.h"
 
+#include <memory>
+
 namespace RESANA {
 
-	class ProcessManager final : public ConcurrentProcess
-	{
-	public:
-		static ProcessManager* Get();
+class ProcessManager final : public SystemObject {
+public:
+  ~ProcessManager() override;
 
-		static void Run();
-		static void Stop();
-		static void Shutdown();
+  static std::shared_ptr<ProcessManager> Get();
 
-		[[nodiscard]] int GetNumProcesses() const;
+  void Run() override;
+  void Stop() override;
+  void Shutdown() override;
 
-		std::shared_ptr<ProcessContainer> GetData();
+  [[nodiscard]] int GetNumProcesses();
 
-		void ReleaseData();
+  static void SyncProcessContainer(ProcessContainer &container);
 
-		void SetUpdateInterval(Timestep interval = TimeTick::Rate::Normal);
-		uint32_t GetUpdateSpeed() const;
+  void SetUpdateInterval(Timestep interval = TimeTick::Rate::Normal);
+  uint32_t GetUpdateSpeed() const;
 
-		bool IsRunning() const;
+  bool IsRunning() const;
 
-	private:
-		ProcessManager();
-		~ProcessManager() override;
+private:
+  ProcessManager();
 
-		void Destroy() const;
+  static void Destroy();
+  bool ShouldClose() const;
+  void PrepareDataThread();
 
-		void PrepareDataThread();
-		void ProcessDataThread();
+  bool PrepareData();
+  void GetPreparedData(ProcessContainer &container);
 
-		bool PrepareData();
-		ProcessContainer* GetPreparedData();
-		void SetData(ProcessContainer* data);
+  bool UpdateProcess(int procId);
 
-		bool UpdateProcess(const ProcessEntry* entry) const;
-		bool UpdateProcess(const PROCESSENTRY32& pe32) const;
+  void CleanMap();
+  void ResetAllRunningStatus();
 
-		void CleanMap();
-		void ResetAllRunningStatus();
-	private:
-		ProcessMap mProcessMap{};
-		std::shared_ptr<ProcessContainer> mProcessContainer{};
+private:
+  ProcessMap mProcessMap{};
+  bool mRunning = false;
+  uint32_t mUpdateInterval{};
+  std::atomic<bool> mDataPrepared;
+  std::atomic<bool> mDataReady;
+  std::atomic<bool> mDataBusy;
 
-		bool mRunning = false;
-		uint32_t mUpdateInterval{};
-		std::atomic<bool> mDataPrepared;
-		std::atomic<bool> mDataReady;
-		std::atomic<bool> mDataBusy;
+  static std::shared_ptr<ProcessManager> sInstance;
+};
 
-		static ProcessManager* sInstance;
-
-	};
-
-}
+} // namespace RESANA

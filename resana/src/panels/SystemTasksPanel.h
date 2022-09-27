@@ -14,7 +14,7 @@ class SystemTasksPanel : public Panel {
 public:
     ~SystemTasksPanel() override;
 
-    static SystemTasksPanel* Create();
+    static std::shared_ptr<SystemTasksPanel> Create();
 
     void ShowPanel(bool* pOpen) override;
 
@@ -33,21 +33,21 @@ public:
 private:
     SystemTasksPanel();
     void CloseChildren();
-    void ShowMenuBar();
+    void ShowMenuBar() const;
 
-    ProcessPanel* mProcPanel = nullptr;
-    PerformancePanel* mPerfPanel = nullptr;
+    std::shared_ptr<ProcessPanel> mProcPanel = nullptr;
+    std::shared_ptr<PerformancePanel> mPerfPanel = nullptr;
     LayerStack<Panel> mPanelStack {};
 
     bool mPanelOpen {};
-    bool mShowProcPanel = false;
+    bool mShowProcPanel = true;
     bool mShowPerfPanel = false;
 
     uint32_t mUpdateInterval {};
     Timestep mLastTick {};
     TimeTick mTimeTick {};
 
-    static SystemTasksPanel* sInstance;
+    static std::shared_ptr<SystemTasksPanel> sInstance;
 };
 
 }

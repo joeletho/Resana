@@ -1,84 +1,89 @@
 #pragma once
 
-#include "system/base/ConcurrentProcess.h"
 #include "LogicalCoreData.h"
+#include "system/base/SystemObject.h"
 
 #include "helpers/Time.h"
 
-#include <queue>
 #include <deque>
+#include <memory>
+#include <queue>
+
+#include "system/processes/Process.h"
 
 namespace RESANA {
 
-	class CPUPerformance : public ConcurrentProcess
-	{
-	public:
-		static void Run();
-		static void Stop();
-		static void Shutdown();
+struct PdhData;
 
-		static CPUPerformance* Get();
+class CpuPerformance : public SystemObject {
+public:
+  ~CpuPerformance() override;
+  CpuPerformance(const CpuPerformance &other);
 
-		std::shared_ptr<LogicalCoreData> GetData();
+  void Run() override;
+  void Stop() override;
+  void Shutdown() override;
 
-		[[nodiscard]] int GetNumProcessors() const;
-		[[nodiscard]] double GetAverageLoad() const;
-		[[nodiscard]] double GetCurrentLoad();
-		[[nodiscard]] double GetCurrentProcessLoad() const;
+  static std::shared_ptr<CpuPerformance> Get();
 
-		// Must be called after GetData() to unlock mutex
-		void ReleaseData();
-		void SetUpdateInterval(Timestep interval);
+  std::shared_ptr<LogicalCoreData> GetData();
 
-		bool IsRunning() const;
+  [[nodiscard]] int GetNumProcessors() const;
+  [[nodiscard]] static double GetCurrentLoad();
+  [[nodiscard]] static double GetCurrentProcessLoad();
+  [[nodiscard]] static double GetProcessLoad(uint32_t procId, PdhData *data);
+  static void GetProcessTimes(PdhData &data);
+  float GetCpuLoad();
 
-	private:
-		CPUPerformance();
-		~CPUPerformance() override;
+  // Must be called after GetData() to unlock mutex
+  void ReleaseData();
+  void SetUpdateInterval(Timestep interval);
 
-		// Initializer
-		void InitCPUData();
-		void InitProcessData();
+  bool IsRunning() const;
 
-		// Calls destructor on new thread
-		void Destroy() const;
+private:
+  CpuPerformance();
 
-		// Threads
-		void PrepareDataThread();
-		void ProcessDataThread();
-		void CalcProcessLoadThread();
+  // Initializer
+  void InitCpuData();
+  void InitProcessData();
 
-		// Called from threads
-		[[nodiscard]] LogicalCoreData* PrepareData() const;
-		LogicalCoreData* ExtractData();
-		void CalcProcessLoad();
-		void SetData(LogicalCoreData* data);
-		void PushData(LogicalCoreData* data);
-		void ProcessData(LogicalCoreData* data);
+  // Threads
+  void PrepareDataThread();
+  void ProcessDataThread();
 
-		// Helpers
-		static LogicalCoreData* SortAscending(LogicalCoreData* data);
+  // Called from threads
+  [[nodiscard]] std::shared_ptr<LogicalCoreData> PrepareData() const;
+  std::shared_ptr<LogicalCoreData> ExtractData();
+  void SetData(std::shared_ptr<LogicalCoreData> &data);
+  void PushData(const std::shared_ptr<LogicalCoreData> &data);
+  void ProcessData(std::shared_ptr<LogicalCoreData> &data);
+  static float CalcCpuLoad(uint64_t idleTicks, uint64_t totalTicks);
+  static double CalcProcessLoad(const uint32_t procId, PdhData *data);
 
-	private:
-		const unsigned int MAX_LOAD_COUNT = 3;
+  static std::shared_ptr<LogicalCoreData>
+  SortAscending(std::shared_ptr<LogicalCoreData> &data);
 
-		bool mRunning = false;
-		uint32_t mUpdateInterval{};
-		std::atomic<bool> mDataReady;
-		std::atomic<bool> mDataBusy;
+private:
+  const unsigned int MAX_LOAD_COUNT = 3;
 
-		std::shared_ptr<LogicalCoreData> mLogicalCoreData{};
-		std::queue<LogicalCoreData*> mDataQueue{};
-		std::deque<double> mCPULoadValues{};
+  bool mRunning = false;
+  uint32_t mUpdateInterval{};
+  std::atomic<bool> mDataReady;
+  std::atomic<bool> mDataBusy;
 
-		double mCPULoadAvg{};
-		double mProcessLoad{};
-		int mNumProcessors{};
+  std::shared_ptr<LogicalCoreData> mLogicalCoreData{};
+  std::queue<std::shared_ptr<LogicalCoreData>> mDataQueue{};
+  std::deque<double> mCpuLoadValues{};
 
-		PDHCounter mCPUCounter{};
-		PDHCounter mLoadCounter{};
-		PDHCounter mProcCounter{};
+  double mCpuLoadAvg{};
+  double mProcessLoad{};
+  int mNumProcessors{};
 
-		static CPUPerformance* sInstance;
-	};
-}
+  PdhData mCpuData;
+  PdhData mLoadData;
+  PdhData mProcData;
+
+  static std::shared_ptr<CpuPerformance> sInstance;
+};
+} // namespace RESANA
